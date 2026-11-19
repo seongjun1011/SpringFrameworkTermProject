@@ -13,6 +13,7 @@
         <p class="sub">성준대학교 통합 학생정보시스템</p>
 
         <div class="alert error" th:if="${error}" th:text="${error}"></div>
+        <div class="alert success" th:if="${success}" th:text="${success}"></div>
 
         <form th:action="@{/login}" method="post">
             <div class="form-row">
@@ -25,6 +26,9 @@
             </div>
             <button type="submit" class="btn">로그인</button>
         </form>
+        <p style="text-align:center;margin-top:14px;font-size:13px;">
+            계정이 없으신가요? <a th:href="@{/signup}">회원가입</a>
+        </p>
     </div>
 </div>
 

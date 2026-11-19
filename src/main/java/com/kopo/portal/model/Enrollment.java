@@ -1,56 +1,45 @@
 package com.kopo.portal.model;
 
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
 /**
- * 학생의 수강신청 내역(학생-과목 관계)을 표현하는 모델 클래스.
+ * 수강신청 내역 엔티티. 학생(Student)과 강좌(Course)의 N:M 관계를 풀어주는 연결 테이블이다.
+ * 같은 학생이 같은 강좌를 두 번 신청할 수 없도록 (student_id, course_id)에 유니크 제약을 건다.
  */
+@Entity
+@Table(name = "enrollments",
+        uniqueConstraints = @UniqueConstraint(name = "uk_enrollment_student_course",
+                columnNames = {"student_id", "course_id"}))
 public class Enrollment {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private Long studentId;
-    private Long courseId;
+
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "student_id")
+    private Student student;
+
+    @ManyToOne(fetch = FetchType.EAGER, optional = false)
+    @JoinColumn(name = "course_id")
+    private Course course;
+
+    @Column(nullable = false)
     private LocalDateTime appliedAt;
 
-    public Enrollment() {
+    protected Enrollment() {
     }
 
-    public Enrollment(Long id, Long studentId, Long courseId, LocalDateTime appliedAt) {
-        this.id = id;
-        this.studentId = studentId;
-        this.courseId = courseId;
+    public Enrollment(Student student, Course course, LocalDateTime appliedAt) {
+        this.student = student;
+        this.course = course;
         this.appliedAt = appliedAt;
     }
 
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public Long getStudentId() {
-        return studentId;
-    }
-
-    public void setStudentId(Long studentId) {
-        this.studentId = studentId;
-    }
-
-    public Long getCourseId() {
-        return courseId;
-    }
-
-    public void setCourseId(Long courseId) {
-        this.courseId = courseId;
-    }
-
-    public LocalDateTime getAppliedAt() {
-        return appliedAt;
-    }
-
-    public void setAppliedAt(LocalDateTime appliedAt) {
-        this.appliedAt = appliedAt;
-    }
+    public Long getId() { return id; }
+    public Student getStudent() { return student; }
+    public Course getCourse() { return course; }
+    public LocalDateTime getAppliedAt() { return appliedAt; }
 }

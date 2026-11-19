@@ -1,23 +1,33 @@
 package com.kopo.portal.model;
 
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
 /**
  * 공지사항 게시글을 표현하는 모델 클래스.
  */
+@Entity
+@Table(name = "notices")
 public class Notice {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false)
     private String title;
+
+    @Column(nullable = false, length = 2000)
     private String content;
+
     private String writer;
     private LocalDateTime createdAt;
 
     public Notice() {
     }
 
-    public Notice(Long id, String title, String content, String writer, LocalDateTime createdAt) {
-        this.id = id;
+    public Notice(String title, String content, String writer, LocalDateTime createdAt) {
         this.title = title;
         this.content = content;
         this.writer = writer;

@@ -1,23 +1,43 @@
 package com.kopo.portal.model;
 
+import jakarta.persistence.*;
+
+/**
+ * 개설 강좌 엔티티.
+ */
+@Entity
+@Table(name = "courses")
 public class Course {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, length = 50)
     private String name;
+
+    @Column(length = 30)
     private String professor;
+
+    @Column(length = 5)
     private String dayOfWeek;
+
     private int startPeriod;
     private int endPeriod;
+
+    @Column(length = 20)
     private String location;
+
     private int capacity;
+
+    /** 현재 신청 인원. 수강신청/취소 시 같은 트랜잭션 안에서 함께 증감한다. */
     private int enrolledCount;
 
-    public Course() {
+    protected Course() {
     }
 
-    public Course(Long id, String name, String professor, String dayOfWeek,
+    public Course(String name, String professor, String dayOfWeek,
                   int startPeriod, int endPeriod, String location, int capacity) {
-        this.id = id;
         this.name = name;
         this.professor = professor;
         this.dayOfWeek = dayOfWeek;
@@ -32,6 +52,14 @@ public class Course {
         return enrolledCount >= capacity;
     }
 
+    public void increaseEnrolled() {
+        enrolledCount++;
+    }
+
+    public void decreaseEnrolled() {
+        enrolledCount = Math.max(0, enrolledCount - 1);
+    }
+
     /** 기존 템플릿 호환용 — "N교시" 또는 "N-M교시" 형태로 반환 */
     public String getPeriod() {
         if (startPeriod == endPeriod) return startPeriod + "교시";
@@ -39,29 +67,12 @@ public class Course {
     }
 
     public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
     public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-
     public String getProfessor() { return professor; }
-    public void setProfessor(String professor) { this.professor = professor; }
-
     public String getDayOfWeek() { return dayOfWeek; }
-    public void setDayOfWeek(String dayOfWeek) { this.dayOfWeek = dayOfWeek; }
-
     public int getStartPeriod() { return startPeriod; }
-    public void setStartPeriod(int startPeriod) { this.startPeriod = startPeriod; }
-
     public int getEndPeriod() { return endPeriod; }
-    public void setEndPeriod(int endPeriod) { this.endPeriod = endPeriod; }
-
     public String getLocation() { return location; }
-    public void setLocation(String location) { this.location = location; }
-
     public int getCapacity() { return capacity; }
-    public void setCapacity(int capacity) { this.capacity = capacity; }
-
     public int getEnrolledCount() { return enrolledCount; }
-    public void setEnrolledCount(int enrolledCount) { this.enrolledCount = enrolledCount; }
 }

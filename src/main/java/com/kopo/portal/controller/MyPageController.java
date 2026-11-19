@@ -31,7 +31,8 @@ public class MyPageController {
                                @RequestParam(defaultValue = "") String accountNumber,
                                HttpSession session, Model model) {
         Student student = (Student) session.getAttribute("loginStudent");
-        studentService.updateProfile(student.getId(), phone, address, accountNumber);
+        student = studentService.updateProfile(student.getId(), phone, address, accountNumber);
+        session.setAttribute("loginStudent", student);
         model.addAttribute("student", student);
         model.addAttribute("success", true);
         return "mypage";

@@ -1,7 +1,7 @@
 # 학생정보시스템 (Student Portal) - Spring Boot
 
-성준대학교 학생정보시스템/통합포털을 참고하여, 1학년 때 HTML/CSS/JS로 만들었던 개인 홈페이지 프로젝트를
-**Spring Boot MVC 구조**로 재구성한 프로젝트입니다.
+성준대학교 학생정보시스템/통합포털을 참고하여, 1학기 웹어플리케이션개발 텀프로젝트로 만든 학생정보시스템에
+**Spring Data JPA**를 적용하여 모든 데이터를 DB에 저장하도록 확장한 프로젝트입니다.
 
 ## 주요 기술
 
@@ -10,7 +10,8 @@
 - Thymeleaf (서버사이드 템플릿 렌더링)
 - HttpSession 기반 직접 구현한 로그인/인증 (Spring Security 미사용)
 - HandlerInterceptor를 이용한 로그인 여부 검사 (`/login`, `/error`, 정적 리소스 제외)
-- 별도의 DB 없이 Service 계층의 메모리 저장소(List/Map)로 데이터 관리
+- Spring Data JPA + H2(파일 DB)로 회원·강좌·수강신청·휴학/장학금신청·공지·채용·학사일정 데이터를 DB에 저장
+- 회원가입 / 로그인 (BCrypt 비밀번호 해시, spring-security-crypto)
 - OpenWeatherMap REST API 연동 (RestTemplate), 키 미설정 시 더미 데이터로 대체
 
 ## 실행 방법
@@ -27,7 +28,7 @@
 
 ## 구현된 기능
 
-- 로그인 / 로그아웃
+- 회원가입 / 로그인 / 로그아웃 (JPA, DB 연동)
 - 통합포털 홈 (날씨, 주간 시간표, 학사일정, 채용정보, 공지사항 위젯)
 - 수강신청 / 수강신청내역조회 (정원 초과 검증, 신청 시 confirm 확인창)
 - 개인시간표조회 (교시×요일 격자, 과목별 색상 구분, 신청과목수·주간수업일수 요약)
@@ -42,9 +43,20 @@
 > 사이드바의 일부 메뉴(증명서발급신청, 등록금조회, 성적조회 등)는 화면 구조만 반영된 비활성 메뉴입니다.
 > 장학금신청의 서류 첨부 기능은 모델(`UploadedFile`)과 업로드 설정(`application.properties`의 `spring.servlet.multipart.*`)만 준비되어 있고, 화면 폼에는 아직 연결되지 않았습니다.
 
-## 데이터 관리 방식
+## 데이터 관리 방식 (JPA)
 
-DB를 아직 학습하지 않은 단계이므로, 모든 데이터는 각 `Service` 클래스 내부의
-`CopyOnWriteArrayList` 기반 메모리 저장소에서 관리됩니다. 서버를 재시작하면 초기 더미 데이터로 리셋됩니다.
-휴학신청·장학금신청은 실행 시점에 결재가 일부/전부 진행된 데모 데이터가 미리 채워져 있어,
-승인·반려·진행중 상태를 바로 확인할 수 있습니다.
+모든 데이터는 Spring Data JPA를 통해 H2 파일 DB(`./data/portaldb.mv.db`)에 저장되며, 서버를 재시작해도 유지됩니다.
+테이블은 엔티티 클래스를 기준으로 자동 생성되고(`ddl-auto=update`), 테이블이 비어 있을 때만
+`DataInitializer`가 데모 데이터(데모 계정, 강좌, 공지, 채용정보, 학사일정, 결재 진행 중인 신청 내역)를 넣습니다.
+
+| 테이블 | 엔티티 | 관계 |
+|---|---|---|
+| students | Student | |
+| courses | Course | |
+| enrollments | Enrollment | students N:1, courses N:1 (학생-강좌 N:M 연결) |
+| leave_applications (+ _steps, _files) | LeaveApplication | students N:1 |
+| scholarship_applications (+ _steps, _files) | ScholarshipApplication | students N:1 |
+| notices / job_postings / academic_schedules | Notice / JobPosting / AcademicSchedule | |
+
+DB 내용은 `http://localhost:8080/h2-console` 또는 IntelliJ Database 창에서 볼 수 있습니다
+(접속 정보는 `application.properties` 주석 참고).

@@ -30,8 +30,7 @@ public class CourseController {
     @GetMapping("/courses")
     public String list(HttpSession session, Model model) {
         Student student = (Student) session.getAttribute("loginStudent");
-        List<Long> enrolledIds = enrollmentService.findByStudent(student.getId())
-                .stream().map(e -> e.getCourseId()).toList();
+        List<Long> enrolledIds = enrollmentService.findEnrolledCourseIds(student.getId());
 
         model.addAttribute("courses", courseService.findAll());
         model.addAttribute("enrolledIds", enrolledIds);
@@ -44,8 +43,7 @@ public class CourseController {
         String error = enrollmentService.enroll(student.getId(), id);
         if (error != null) {
             model.addAttribute("error", error);
-            List<Long> enrolledIds = enrollmentService.findByStudent(student.getId())
-                    .stream().map(e -> e.getCourseId()).toList();
+            List<Long> enrolledIds = enrollmentService.findEnrolledCourseIds(student.getId());
             model.addAttribute("courses", courseService.findAll());
             model.addAttribute("enrolledIds", enrolledIds);
             return "courses";

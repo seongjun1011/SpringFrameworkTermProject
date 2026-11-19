@@ -1,13 +1,26 @@
 package com.kopo.portal.model;
 
+import jakarta.persistence.*;
+
 import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "students")
 public class Student {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, unique = true, length = 20)
     private String loginId;
+
+    @Column(nullable = false)
     private String password;
+
+    @Column(nullable = false, length = 30)
     private String name;
+
     private String department;
     private String campus;
     private String grade;
@@ -21,9 +34,8 @@ public class Student {
     public Student() {
     }
 
-    public Student(Long id, String loginId, String password, String name,
+    public Student(String loginId, String password, String name,
                    String department, String campus, String grade) {
-        this.id = id;
         this.loginId = loginId;
         this.password = password;
         this.name = name;

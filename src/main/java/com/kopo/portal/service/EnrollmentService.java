@@ -2,75 +2,78 @@ package com.kopo.portal.service;
 
 import com.kopo.portal.model.Course;
 import com.kopo.portal.model.Enrollment;
+import com.kopo.portal.repository.CourseRepository;
+import com.kopo.portal.repository.EnrollmentRepository;
+import com.kopo.portal.repository.StudentRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.stream.Collectors;
 
 /**
- * 수강신청(학생-과목 관계) 처리를 담당하는 서비스.
- * 정원 초과, 중복 신청 같은 비즈니스 규칙을 검증하는 핵심 로직이 들어있다.
+ * 수강신청(학생-과목 관계) 처리를 담당하는 서비스 (JPA 사용).
+ * 정원 초과, 중복 신청 같은 비즈니스 규칙을 검증하고,
+ * 신청 내역 저장과 강좌 신청 인원 증감을 하나의 트랜잭션으로 처리한다.
  */
 @Service
+@Transactional(readOnly = true)
 public class EnrollmentService {
 
-    private final List<Enrollment> enrollments = new CopyOnWriteArrayList<>();
-    private final AtomicLong idGenerator = new AtomicLong(1);
-    private final CourseService courseService;
+    private final EnrollmentRepository enrollmentRepository;
+    private final CourseRepository courseRepository;
+    private final StudentRepository studentRepository;
 
-    public EnrollmentService(CourseService courseService) {
-        this.courseService = courseService;
+    public EnrollmentService(EnrollmentRepository enrollmentRepository,
+                             CourseRepository courseRepository,
+                             StudentRepository studentRepository) {
+        this.enrollmentRepository = enrollmentRepository;
+        this.courseRepository = courseRepository;
+        this.studentRepository = studentRepository;
     }
 
     /**
      * 수강신청을 시도한다.
      * @return 성공 시 null, 실패 시 사용자에게 보여줄 에러 메시지
      */
-    public synchronized String enroll(Long studentId, Long courseId) {
-        Course course = courseService.findById(courseId).orElse(null);
+    @Transactional
+    public String enroll(Long studentId, Long courseId) {
+        // 행 잠금으로 강좌를 읽어, 동시에 신청해도 정원을 넘지 않게 한다.
+        Course course = courseRepository.findByIdForUpdate(courseId).orElse(null);
         if (course == null) {
             return "존재하지 않는 강좌입니다.";
         }
-        boolean alreadyEnrolled = enrollments.stream()
-                .anyMatch(e -> e.getStudentId().equals(studentId) && e.getCourseId().equals(courseId));
-        if (alreadyEnrolled) {
+        if (enrollmentRepository.existsByStudentIdAndCourseId(studentId, courseId)) {
             return "이미 신청한 강좌입니다.";
         }
         if (course.isFull()) {
             return "정원이 초과된 강좌입니다.";
         }
-        enrollments.add(new Enrollment(idGenerator.getAndIncrement(), studentId, courseId, LocalDateTime.now()));
-        course.setEnrolledCount(course.getEnrolledCount() + 1);
+        enrollmentRepository.save(new Enrollment(
+                studentRepository.getReferenceById(studentId), course, LocalDateTime.now()));
+        course.increaseEnrolled();   // 변경 감지(dirty checking)로 UPDATE 실행
         return null;
     }
 
-    public synchronized void cancel(Long studentId, Long courseId) {
-        Enrollment target = enrollments.stream()
-                .filter(e -> e.getStudentId().equals(studentId) && e.getCourseId().equals(courseId))
-                .findFirst()
-                .orElse(null);
-        if (target == null) {
-            return;
-        }
-        enrollments.remove(target);
-        courseService.findById(courseId)
-                .ifPresent(c -> c.setEnrolledCount(Math.max(0, c.getEnrolledCount() - 1)));
+    @Transactional
+    public void cancel(Long studentId, Long courseId) {
+        enrollmentRepository.findByStudentIdAndCourseId(studentId, courseId).ifPresent(e -> {
+            enrollmentRepository.delete(e);
+            courseRepository.findByIdForUpdate(courseId).ifPresent(Course::decreaseEnrolled);
+        });
     }
 
     public List<Enrollment> findByStudent(Long studentId) {
-        return enrollments.stream()
-                .filter(e -> e.getStudentId().equals(studentId))
-                .collect(Collectors.toList());
+        return enrollmentRepository.findByStudentIdOrderByAppliedAtAsc(studentId);
     }
 
-    /** 로그인한 학생이 신청한 과목 목록(Course)을 그대로 반환한다. */
+    /** 로그인한 학생이 신청한 과목 목록(Course)을 반환한다. */
     public List<Course> findEnrolledCourses(Long studentId) {
-        return findByStudent(studentId).stream()
-                .map(e -> courseService.findById(e.getCourseId()).orElse(null))
-                .filter(c -> c != null)
-                .collect(Collectors.toList());
+        return findByStudent(studentId).stream().map(Enrollment::getCourse).toList();
+    }
+
+    /** 로그인한 학생이 신청한 강좌 id 목록 (수강신청 화면의 신청/취소 버튼 표시용). */
+    public List<Long> findEnrolledCourseIds(Long studentId) {
+        return findByStudent(studentId).stream().map(e -> e.getCourse().getId()).toList();
     }
 }
