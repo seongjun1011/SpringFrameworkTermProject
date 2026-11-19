@@ -28,3 +28,6 @@ bin/
 .vscode/
 data/
 uploads/
+
+### Claude Code ###
+.claude/
