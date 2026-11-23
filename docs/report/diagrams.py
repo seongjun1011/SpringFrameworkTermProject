@@ -127,7 +127,7 @@ s.box(110, 205, 180, 120, "사용자 브라우저\n(Chrome 등)", "ext", weight=
 s.rect(250, 80, 980, 720, "#FAFBFC", "#9AA5B1", rx=14, sw=1.5)
 s.text(272, 104, "Spring Boot 3.2.5 애플리케이션  ·  내장 Tomcat (포트 8080)", size=15, weight=700, anchor="start")
 
-s.layer(280, 130, 180, 150, "LoginInterceptor", "common", body="로그인 여부 검사\n미로그인 → /login\n(/login, /signup 제외)")
+s.layer(280, 130, 180, 150, "LoginInterceptor", "common", body="로그인 여부 검사\n미로그인 → /login\n초기 비밀번호 사용 중\n→ /password/change")
 s.layer(280, 310, 180, 130, "HttpSession", "common", body="로그인한 학생 정보\n(loginStudent)")
 s.layer(280, 470, 180, 160, "설정 (config)", "common", items=["WebConfig", "PasswordConfig (BCrypt)", "DataInitializer"], item_h=28, gap=7)
 
@@ -169,7 +169,9 @@ VC = "VARCHAR"
 T = {
     "students": ("학생", [("PK", "id", "BIGINT"), ("UK", "login_id", f"{VC}(20)"), ("", "password", f"{VC}(255)"),
                          ("", "name", f"{VC}(30)"), ("", "department", f"{VC}(255)"), ("", "campus", f"{VC}(255)"),
-                         ("", "grade", f"{VC}(255)"), ("", "phone", f"{VC}(255)"), ("", "address", f"{VC}(255)"),
+                         ("", "grade", f"{VC}(255)"), ("", "birth_date", "DATE"),
+                         ("", "password_change_required", "BOOLEAN"), ("", "login_fail_count", "INT"),
+                         ("", "locked", "BOOLEAN"), ("", "phone", f"{VC}(255)"), ("", "address", f"{VC}(255)"),
                          ("", "account_number", f"{VC}(255)"), ("", "last_login_at", "TIMESTAMP"),
                          ("", "last_login_ip", f"{VC}(255)")], None),
     "enrollments": ("수강신청", [("PK", "id", "BIGINT"), ("FK", "student_id", "BIGINT"), ("FK", "course_id", "BIGINT"),
@@ -202,7 +204,7 @@ for p, k in (("leave_applications", "휴학"), ("scholarship_applications", "장
     T[p + "_files"] = (f"첨부파일", files_cols, None)
 
 TW, HH, RH = 320, 34, 24
-e = Svg(1540, 1300)
+e = Svg(1540, 1360)
 
 
 def table(name, x, y, child=False):
@@ -257,34 +259,34 @@ c1, c2, c3, c4 = 40, 420, 800, 1180
 table("students", c2, 40)
 table("enrollments", c3, 40)
 table("courses", c4, 40)
-table("leave_applications", c1, 440)
-table("scholarship_applications", c3, 440)
-table("leave_applications_steps", c1, 700, child=True)
-table("leave_applications_files", c2, 700, child=True)
-table("scholarship_applications_steps", c3, 700, child=True)
-table("scholarship_applications_files", c4, 700, child=True)
+table("leave_applications", c1, 500)
+table("scholarship_applications", c3, 500)
+table("leave_applications_steps", c1, 760, child=True)
+table("leave_applications_files", c2, 760, child=True)
+table("scholarship_applications_steps", c3, 760, child=True)
+table("scholarship_applications_files", c4, 760, child=True)
 
 rel([(740, 110), (800, 110)])
 rel([(1180, 134), (1120, 134)])
-rel([(420, 300), (200, 300), (200, 440)])
-rel([(740, 300), (960, 300), (960, 440)])
-rel([(200, 618), (200, 700)])
-rel([(360, 580), (580, 580), (580, 700)])
-rel([(960, 618), (960, 700)])
-rel([(1120, 580), (1340, 580), (1340, 700)])
+rel([(420, 300), (200, 300), (200, 500)])
+rel([(740, 300), (960, 300), (960, 500)])
+rel([(200, 678), (200, 760)])
+rel([(360, 640), (580, 640), (580, 760)])
+rel([(960, 678), (960, 760)])
+rel([(1120, 640), (1340, 640), (1340, 760)])
 e.text(770, 92, "1 : N", size=12, fill=MUTED, halo=True)
 e.text(1150, 116, "1 : N", size=12, fill=MUTED, halo=True)
 e.text(310, 284, "1 : N", size=12, fill=MUTED, halo=True)
 e.text(850, 284, "1 : N", size=12, fill=MUTED, halo=True)
 
-e.add(f'<line x1="40" y1="945" x2="1500" y2="945" stroke="#CBD2D9" stroke-dasharray="6 5"/>')
-e.text(40, 968, "독립 테이블 (다른 테이블과 연관관계 없음)", size=13, weight=600, fill=MUTED, anchor="start")
-table("notices", c1, 990)
-table("academic_schedules", c2, 990)
-table("job_postings", c3, 990)
+e.add(f'<line x1="40" y1="1005" x2="1500" y2="1005" stroke="#CBD2D9" stroke-dasharray="6 5"/>')
+e.text(40, 1028, "독립 테이블 (다른 테이블과 연관관계 없음)", size=13, weight=600, fill=MUTED, anchor="start")
+table("notices", c1, 1050)
+table("academic_schedules", c2, 1050)
+table("job_postings", c3, 1050)
 
 # 범례
-lx, ly = c4, 990
+lx, ly = c4, 1050
 e.rect(lx, ly, TW, 200, "#FAFBFC", "#CBD2D9", rx=8, sw=1.2)
 e.text(lx + 16, ly + 24, "표기법", size=13.5, weight=700, anchor="start")
 rel([(lx + 20, ly + 58), (lx + 110, ly + 58)])
@@ -297,37 +299,48 @@ e.rect(lx + 20, ly + 160, 22, 14, "#64748B", "#64748B", rx=3, sw=1)
 e.text(lx + 52, ly + 167, "@ElementCollection 테이블", size=12.5, fill=MUTED, anchor="start")
 e.save("2_ERD")
 
-# ---------------------------------------------------------------- 3. 로그인·회원가입 흐름
-f = Svg(1220, 1080)
-f.legend(960, 36, [("term", "시작 / 끝"), ("proc", "처리 · 화면"), ("dec", "판단"), ("db", "DB 작업 (JPA)")])
-f.term(200, 80, 240, 60, "사용자 접속\nhttp://localhost:8080")
-f.arrow([(200, 110), (200, 158)])
-f.diamond(200, 220, 240, 120, "로그인 되어 있는가?\n(LoginInterceptor)", size=13)
-f.arrow([(320, 220), (438, 220)], "아니오", (380, 204))
-f.box(560, 220, 240, 60, "로그인 화면 (/login)", "proc")
-f.arrow([(560, 250), (560, 298)])
-f.diamond(560, 360, 240, 120, "계정이 있는가?")
-f.arrow([(680, 360), (788, 360)], "아니오", (734, 344))
-f.box(920, 360, 260, 70, "회원가입 화면 (/signup)\n학번·이름·비밀번호 입력", "proc")
-f.arrow([(920, 395), (920, 448)])
-f.diamond(920, 520, 260, 140, "입력값 검증\n아이디 4~20자 · 중복 여부\n비밀번호 확인 일치", size=13)
-f.arrow([(1050, 520), (1110, 520), (1110, 360), (1052, 360)], "실패", (1080, 504))
-f.arrow([(920, 590), (920, 643)], "통과", (932, 617), anchor="start")
-f.box(920, 680, 260, 70, "students INSERT\n비밀번호 BCrypt 암호화 저장", "db")
-f.arrow([(1050, 680), (1160, 680), (1160, 220), (682, 220)], "가입 완료 → 로그인 화면", (920, 204))
-f.arrow([(560, 420), (560, 468)], "예", (572, 444), anchor="start")
-f.box(560, 500, 240, 60, "학번 · 비밀번호 입력", "proc")
-f.arrow([(560, 530), (560, 583)])
-f.diamond(560, 650, 260, 130, "비밀번호 일치?\n(BCrypt matches)")
-f.arrow([(430, 650), (390, 650), (390, 280), (500, 280), (500, 252)], "아니오\n(오류 메시지)", (380, 470), anchor="end")
-f.arrow([(560, 715), (560, 768)], "예", (572, 742), anchor="start")
-f.box(560, 810, 280, 80, "세션에 학생 정보 저장\n마지막 로그인 시각·IP UPDATE", "db")
-f.arrow([(560, 850), (560, 940), (342, 940)])
-f.arrow([(200, 280), (200, 903)], "예", (212, 304), anchor="start")
-f.box(200, 940, 280, 70, "통합포털 대시보드 ( / )\n시간표·학사일정·공지·채용·날씨", "proc")
-f.arrow([(200, 975), (200, 1013)])
-f.term(200, 1040, 260, 44, "주요 기능 실행 흐름으로", size=13)
-f.save("3_실행흐름도_로그인회원가입")
+# ---------------------------------------------------------------- 3. 로그인 흐름 (회원가입 없음)
+f = Svg(1300, 1180)
+f.legend(1060, 30, [("term", "시작 / 끝"), ("proc", "처리 · 화면"), ("dec", "판단"), ("db", "DB 작업 (JPA)")])
+f.box(1110, 200, 300, 90, "학사팀 사전 등록 (DataInitializer)\n학번·이름·학과·생년월일 INSERT\n초기 비밀번호 = 생년월일 6자리", "db", size=13)
+f.text(1110, 262, "※ 회원가입 기능 없음", size=12.5, fill=MUTED)
+
+f.term(200, 70, 240, 56, "사용자 접속\nhttp://localhost:8080")
+f.arrow([(200, 98), (200, 140)])
+f.diamond(200, 200, 240, 110, "로그인 되어 있는가?\n(LoginInterceptor)", size=13)
+f.arrow([(320, 200), (428, 200)], "아니오", (374, 184))
+f.box(560, 200, 260, 60, "로그인 화면 (/login)\n학번 · 비밀번호 입력", "proc", size=13)
+f.arrow([(560, 230), (560, 278)])
+f.diamond(560, 335, 250, 110, "계정이 잠겨 있는가?\n(5회 실패)", size=13)
+f.arrow([(685, 335), (838, 335)], "예", (760, 319))
+f.box(970, 335, 260, 70, "비밀번호 초기화 (/password/reset)\n학번·이름·생년월일 입력", "proc", size=13)
+f.arrow([(970, 370), (970, 418)])
+f.diamond(970, 480, 250, 110, "학적 정보와\n일치하는가?", size=13)
+f.arrow([(1095, 480), (1170, 480), (1170, 335), (1102, 335)], "아니오", (1182, 410), anchor="start")
+f.arrow([(970, 535), (970, 588)], "예", (982, 560), anchor="start")
+f.box(970, 630, 280, 76, "students UPDATE\n비밀번호 = 생년월일(BCrypt)\n잠금 해제 · 변경 필요 표시", "db", size=13)
+f.arrow([(970, 668), (970, 720), (1240, 720), (1240, 150), (560, 150), (560, 168)], "초기화 완료 → 로그인 화면", (1100, 704))
+
+f.arrow([(560, 390), (560, 433)], "아니오", (572, 410), anchor="start")
+f.diamond(560, 495, 250, 120, "비밀번호 일치?\n(BCrypt matches)", size=13)
+f.arrow([(435, 495), (400, 495), (400, 560)], "아니오", (392, 480), anchor="end")
+f.box(400, 600, 230, 76, "실패 횟수 +1 UPDATE\n5회 도달 시 계정 잠금\n(남은 횟수 안내)", "db", size=13)
+f.arrow([(285, 600), (262, 600), (262, 260), (430, 260), (430, 232)])
+f.arrow([(685, 495), (720, 495), (720, 700), (560, 700), (560, 728)], "예", (732, 595), anchor="start")
+f.box(560, 770, 300, 80, "세션 재발급 후 학생 정보 저장\n실패 횟수 0 · 마지막 로그인 시각/IP\nUPDATE", "db", size=13)
+f.arrow([(560, 810), (560, 853)])
+f.diamond(560, 915, 260, 120, "초기 비밀번호\n사용 중인가?", size=13)
+f.arrow([(690, 915), (798, 915)], "예", (744, 899))
+f.box(950, 915, 290, 84, "비밀번호 변경 (/password/change)\n영문+숫자 8~20자\n학번·생년월일 포함 금지\n(변경 전 다른 메뉴 접근 차단)", "proc", size=13)
+f.arrow([(950, 957), (950, 1003)])
+f.box(950, 1035, 260, 60, "students UPDATE\n새 비밀번호(BCrypt) · 변경 완료", "db", size=13)
+f.arrow([(820, 1035), (342, 1035)])
+f.arrow([(560, 975), (560, 1035)], "아니오", (572, 1000), anchor="start", head=False)
+f.arrow([(200, 255), (200, 998)], "예", (212, 280), anchor="start")
+f.box(200, 1035, 280, 70, "통합포털 대시보드 ( / )\n시간표·학사일정·공지·채용·날씨", "proc")
+f.arrow([(200, 1070), (200, 1108)])
+f.term(200, 1135, 260, 44, "주요 기능 실행 흐름으로", size=13)
+f.save("3_실행흐름도_로그인")
 
 # ---------------------------------------------------------------- 4. 주요 기능 흐름
 g = Svg(1540, 840)
@@ -379,3 +392,118 @@ g.add(f'<polyline points="170,700 1370,700" fill="none" stroke="{LINE}" stroke-w
 g.arrow([(770, 700), (770, 738)])
 g.term(770, 770, 440, 60, "다른 메뉴 선택 (반복) 또는 로그아웃\n로그아웃 시 세션 삭제 → 로그인 화면", size=13)
 g.save("4_실행흐름도_주요기능")
+
+# ---------------------------------------------------------------- 5. 유스케이스 다이어그램
+u = Svg(1360, 1500)
+u.add("__SYSBOX__")
+u.text(270, 56, "성준대학교 학생정보시스템 (Spring Boot)", size=15, weight=700, anchor="start")
+
+UC = {}
+
+
+def actor(cx, cy, name):
+    st = f'fill="none" stroke="{INK}" stroke-width="2"'
+    u.add(f'<circle cx="{cx}" cy="{cy - 46}" r="14" {st}/>')
+    u.add(f'<line x1="{cx}" y1="{cy - 32}" x2="{cx}" y2="{cy + 8}" {st}/>')
+    u.add(f'<line x1="{cx - 24}" y1="{cy - 18}" x2="{cx + 24}" y2="{cy - 18}" {st}/>')
+    u.add(f'<line x1="{cx}" y1="{cy + 8}" x2="{cx - 18}" y2="{cy + 38}" {st}/>')
+    u.add(f'<line x1="{cx}" y1="{cy + 8}" x2="{cx + 18}" y2="{cy + 38}" {st}/>')
+    u.text(cx, cy + 60, name, size=14, weight=700)
+
+
+def uc(key, cx, cy, label, w=220, h=48, kind="ctrl"):
+    fill, stroke = C[kind]
+    u.add(f'<ellipse cx="{cx}" cy="{cy}" rx="{w / 2}" ry="{h / 2}" fill="{fill}" stroke="{stroke}" stroke-width="1.6"/>')
+    u.text(cx, cy, label, size=13)
+    UC[key] = (cx, cy, w, h)
+
+
+def edge(k, x, y):
+    cx, cy, w, h = UC[k]
+    dx, dy = x - cx, y - cy
+    t = 1 / (((dx / (w / 2)) ** 2 + (dy / (h / 2)) ** 2) ** 0.5)
+    return cx + dx * t, cy + dy * t
+
+
+def assoc(ax, ay, k):
+    ex, ey = edge(k, ax, ay)
+    u.add(f'<line x1="{ax}" y1="{ay}" x2="{ex:.1f}" y2="{ey:.1f}" stroke="{LINE}" stroke-width="1.3"/>')
+
+
+def dep(a, b, label):
+    """a → b 점선 (<<include>>: 기본 → 포함, <<extend>>: 확장 → 기본)"""
+    ax_, ay_ = UC[a][:2]
+    bx, by = UC[b][:2]
+    sx, sy = edge(a, bx, by)
+    ex, ey = edge(b, ax_, ay_)
+    u.arrow([(round(sx, 1), round(sy, 1)), (round(ex, 1), round(ey, 1))], dashed=True)
+    u.text((sx + ex) / 2, (sy + ey) / 2 - 9, label, size=11.5, fill=MUTED, halo=True, italic=True)
+
+
+L, R = 440, 860           # 학생이 직접 쓰는 기능(왼쪽) / 포함·확장 기능(오른쪽)
+GROUPS = [
+    ("계정 · 인증", [("login", "로그인"), ("logout", "로그아웃"), ("pwchange", "비밀번호 변경"),
+                    ("pwreset", "비밀번호 초기화 (본인 확인)")]),
+    ("수업 / 성적", [("enroll", "수강신청"), ("cancel", "수강취소"), ("enlist", "수강신청내역 조회"),
+                    ("tt", "개인시간표 조회")]),
+    ("학적 / 장학", [("mypage", "개인신상정보 수정"), ("leave", "휴학 · 복학 신청"), ("schol", "장학금 신청"),
+                    ("approval", "결재 진행 상태 조회")]),
+    ("포털 · 게시판", [("dash", "통합포털 대시보드"), ("notice", "공지사항 조회"), ("job", "채용정보 조회"),
+                      ("sched", "학사일정 조회 (월별)")]),
+]
+y = 80
+student_ucs = []
+for title, items in GROUPS:
+    h = 40 + len(items) * 66
+    u.rect(290, y, 760, h, "#FFFFFF", "#CBD2D9", rx=10, sw=1.2, dash="5 4")
+    u.text(304, y + 18, title, size=13, weight=700, fill=MUTED, anchor="start")
+    for i, (k, label) in enumerate(items):
+        uc(k, L, y + 66 + i * 66, label)
+        student_ucs.append(k)
+    y += h + 24
+
+# 오른쪽: 포함(include) / 확장(extend) 유스케이스
+uc("lock", R, UC["login"][1] + 10, "계정 잠금 (5회 실패)", kind="common")
+uc("firstchg", R, UC["pwchange"][1] + 10, "최초 로그인 시\n비밀번호 변경 강제", h=56, kind="common")
+dep("lock", "login", "<<extend>>")
+dep("firstchg", "login", "<<extend>>")
+
+uc("check", R, UC["enroll"][1] + 30, "정원 · 중복 검증\n(행 잠금)", h=56, kind="common")
+dep("enroll", "check", "<<include>>")
+
+uc("upload", R, (UC["leave"][1] + UC["schol"][1]) / 2, "첨부파일 업로드", kind="common")
+dep("leave", "upload", "<<include>>")
+dep("schol", "upload", "<<include>>")
+
+uc("weather", R, UC["dash"][1] + 30, "날씨 조회", kind="common")
+dep("dash", "weather", "<<include>>")
+
+# 학사팀
+u.rect(290, y, 760, 100, "#FFFFFF", "#CBD2D9", rx=10, sw=1.2, dash="5 4")
+u.text(304, y + 18, "학적 관리", size=13, weight=700, fill=MUTED, anchor="start")
+uc("register", R, y + 56, "학생 학적 등록\n(초기 비밀번호 발급)", w=240, h=56, kind="db")
+
+# 액터
+sy = (UC["login"][1] + UC["sched"][1]) / 2
+actor(120, sy, "학생")
+for k in student_ucs:   # 타원의 왼쪽 끝에 연결해 다른 타원을 가로지르지 않게 함
+    cx, cy, w, h = UC[k]
+    u.add(f'<line x1="146" y1="{sy - 18}" x2="{cx - w / 2}" y2="{cy}" stroke="{LINE}" stroke-width="1.3"/>')
+
+actor(1220, y + 40, "학사팀")
+assoc(1196, y + 22, "register")
+
+ex_y = UC["weather"][1]
+u.rect(1120, ex_y - 40, 200, 80, C["ext"][0], C["ext"][1], rx=8)
+u.text(1220, ex_y - 14, "<<external system>>", size=11.5, fill=MUTED, italic=True)
+u.text(1220, ex_y + 12, "OpenWeatherMap API", size=13, weight=600)
+assoc(1120, ex_y, "weather")
+
+u.legend(1110, 60, [("ctrl", "학생 사용 기능"), ("common", "포함 · 확장 기능"), ("db", "관리 기능")])
+u.add(f'<line x1="1110" y1="152" x2="1150" y2="152" stroke="{LINE}" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#arr)"/>')
+u.text(1158, 152, "include / extend", size=13, anchor="start", fill=MUTED)
+bottom = y + 100 + 30
+u.h = bottom + 90
+u.parts[u.parts.index("__SYSBOX__")] = (f'<rect x="250" y="30" width="830" height="{bottom - 30}" rx="14" '
+                                        f'fill="#FAFBFC" stroke="#9AA5B1" stroke-width="1.5"/>')
+u.save("5_유스케이스다이어그램")
