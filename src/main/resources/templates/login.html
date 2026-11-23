@@ -18,7 +18,7 @@
         <form th:action="@{/login}" method="post">
             <div class="form-row">
                 <label for="loginId">학번 / 아이디</label>
-                <input type="text" id="loginId" name="loginId" placeholder="학번을 입력하세요" required>
+                <input type="text" id="loginId" name="loginId" th:value="${loginId}" placeholder="학번을 입력하세요" required>
             </div>
             <div class="form-row">
                 <label for="password">비밀번호</label>
@@ -27,8 +27,14 @@
             <button type="submit" class="btn">로그인</button>
         </form>
         <p style="text-align:center;margin-top:14px;font-size:13px;">
-            계정이 없으신가요? <a th:href="@{/signup}">회원가입</a>
+            <a th:href="@{/password/reset}">비밀번호 초기화</a>
         </p>
+        <div class="hint">
+            • 신입생·편입생의 초기 비밀번호는 <b>생년월일 6자리</b>(예: 030101)입니다.<br>
+            • 최초 로그인 시 비밀번호를 반드시 변경해야 합니다.<br>
+            • 비밀번호를 5회 잘못 입력하면 계정이 잠깁니다.<br>
+            • 학적 정보 오류는 학사지원팀에 문의하세요.
+        </div>
     </div>
 </div>
 

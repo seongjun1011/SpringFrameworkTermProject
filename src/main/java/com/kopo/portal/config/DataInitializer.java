@@ -9,10 +9,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * 서버 시작 시 실행되어, 각 테이블이 비어 있을 때만 초기(데모) 데이터를 넣는다.
  * 이미 데이터가 있으면 아무것도 하지 않으므로, 사용자가 입력한 데이터는 재시작해도 유지된다.
+ *
+ * 학생 계정은 회원가입이 아니라 학사팀이 학적 정보를 등록하는 방식이다(registerStudents).
+ * 초기 비밀번호는 생년월일 6자리이고, 최초 로그인 시 비밀번호 변경이 강제된다.
  */
 @Component
 public class DataInitializer implements CommandLineRunner {
@@ -49,10 +53,7 @@ public class DataInitializer implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        Student demo = studentRepository.findByLoginId(DEMO_LOGIN_ID)
-                .orElseGet(() -> studentRepository.save(new Student(DEMO_LOGIN_ID,
-                        passwordEncoder.encode("1234"),
-                        "박성준", "인공지능소프트웨어과", "서울정수캠퍼스", "2학년")));
+        Student demo = registerStudents();
 
         if (noticeRepository.count() == 0) initNotices();
         if (courseRepository.count() == 0) initCourses();
@@ -60,6 +61,39 @@ public class DataInitializer implements CommandLineRunner {
         if (jobPostingRepository.count() == 0) initJobs();
         if (leaveRepository.count() == 0) initLeaveApplications(demo);
         if (scholarshipRepository.count() == 0) initScholarshipApplications(demo);
+    }
+
+    /**
+     * 학사팀이 등록한 학적 정보(학생 명단). 학번이 없을 때만 등록한다.
+     * 데모 계정(박성준)은 이미 비밀번호를 1234로 변경한 상태로 두고,
+     * 나머지 학생은 초기 비밀번호(생년월일 6자리)로 최초 로그인 흐름을 체험할 수 있다.
+     */
+    private Student registerStudents() {
+        String dept = "인공지능소프트웨어과";
+        String campus = "서울정수캠퍼스";
+        register("2301110301", "김민준", dept, campus, "2학년", LocalDate.of(2004, 3, 15));
+        register("2401110302", "이서연", dept, campus, "1학년", LocalDate.of(2005, 7, 22));
+        register("2401110303", "최도윤", dept, campus, "1학년", LocalDate.of(2005, 11, 9));
+
+        Student demo = studentRepository.findByLoginId(DEMO_LOGIN_ID).orElseGet(() -> {
+            Student s = register(DEMO_LOGIN_ID, "박성준", dept, campus, "2학년", LocalDate.of(2003, 1, 1));
+            s.setPassword(passwordEncoder.encode("1234"));
+            s.setPasswordChangeRequired(false);
+            return s;
+        });
+        if (demo.getBirthDate() == null) {   // 이전 버전 DB에 생년월일 없이 저장된 데모 계정 보정
+            demo.setBirthDate(LocalDate.of(2003, 1, 1));
+        }
+        return demo;
+    }
+
+    private Student register(String loginId, String name, String department, String campus,
+                             String grade, LocalDate birthDate) {
+        return studentRepository.findByLoginId(loginId).orElseGet(() -> {
+            String initialPassword = birthDate.format(DateTimeFormatter.ofPattern("yyMMdd"));
+            return studentRepository.save(Student.register(loginId, passwordEncoder.encode(initialPassword),
+                    name, department, campus, grade, birthDate));
+        });
     }
 
     private void initNotices() {

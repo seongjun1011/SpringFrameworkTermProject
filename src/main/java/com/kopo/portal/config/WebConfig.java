@@ -15,7 +15,7 @@ public class WebConfig implements WebMvcConfigurer {
         registry.addInterceptor(new LoginInterceptor())
                 .excludePathPatterns(
                         "/login",
-                        "/signup",
+                        "/password/reset",
                         "/h2-console/**",
                         "/error",
                         "/css/**",

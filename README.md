@@ -11,7 +11,7 @@
 - HttpSession 기반 직접 구현한 로그인/인증 (Spring Security 미사용)
 - HandlerInterceptor를 이용한 로그인 여부 검사 (`/login`, `/error`, 정적 리소스 제외)
 - Spring Data JPA + H2(파일 DB)로 회원·강좌·수강신청·휴학/장학금신청·공지·채용·학사일정 데이터를 DB에 저장
-- 회원가입 / 로그인 (BCrypt 비밀번호 해시, spring-security-crypto)
+- 학사팀 사전 등록 계정 + 로그인 (BCrypt 비밀번호 해시, spring-security-crypto) — 회원가입 없음
 - OpenWeatherMap REST API 연동 (RestTemplate), 키 미설정 시 더미 데이터로 대체
 
 ## 실행 방법
@@ -20,7 +20,13 @@
 2. `StudentPortalApplication.java` 실행
 3. 브라우저에서 `http://localhost:8080` 접속
 4. 데모 계정으로 로그인
-   - `2301110329` / `1234` (박성준)
+
+   | 학번 | 이름 | 비밀번호 | 비고 |
+   |---|---|---|---|
+   | `2301110329` | 박성준 | `1234` | 비밀번호 변경 완료 상태 |
+   | `2301110301` | 김민준 | `040315` (생년월일) | 최초 로그인 → 비밀번호 변경 강제 |
+   | `2401110302` | 이서연 | `050722` (생년월일) | 〃 |
+   | `2401110303` | 최도윤 | `051109` (생년월일) | 〃 |
 
 날씨 위젯에 실시간 데이터를 표시하려면 `src/main/resources/application.properties`의
 `weather.api.key`에 [OpenWeatherMap](https://openweathermap.org/api)에서 발급받은 키를 입력하세요.
@@ -28,7 +34,13 @@
 
 ## 구현된 기능
 
-- 회원가입 / 로그인 / 로그아웃 (JPA, DB 연동)
+- 로그인 / 로그아웃 (JPA, DB 연동)
+  - 실제 학사정보시스템처럼 **회원가입이 없고**, 학사팀이 학적 정보를 미리 등록 (`DataInitializer`)
+  - 초기 비밀번호는 생년월일 6자리, **최초 로그인 시 비밀번호 변경 강제** (변경 전에는 다른 메뉴 접근 차단)
+  - 비밀번호 규칙: 영문+숫자 8~20자, 학번·생년월일 포함 금지
+  - 비밀번호 5회 오입력 시 계정 잠금
+  - 비밀번호 초기화: 학번·이름·생년월일로 본인 확인 → 생년월일로 초기화 + 잠금 해제
+  - 비밀번호변경 메뉴 (로그인 후 자발적 변경)
 - 통합포털 홈 (날씨, 주간 시간표, 학사일정, 채용정보, 공지사항 위젯)
 - 수강신청 / 수강신청내역조회 (정원 초과 검증, 신청 시 confirm 확인창)
 - 개인시간표조회 (교시×요일 격자, 과목별 색상 구분, 신청과목수·주간수업일수 요약)
@@ -51,12 +63,15 @@
 
 | 테이블 | 엔티티 | 관계 |
 |---|---|---|
-| students | Student | |
+| students | Student | 학번·생년월일·초기비밀번호 변경 여부·로그인 실패 횟수·잠금 여부 |
 | courses | Course | |
 | enrollments | Enrollment | students N:1, courses N:1 (학생-강좌 N:M 연결) |
 | leave_applications (+ _steps, _files) | LeaveApplication | students N:1 |
 | scholarship_applications (+ _steps, _files) | ScholarshipApplication | students N:1 |
 | notices / job_postings / academic_schedules | Notice / JobPosting / AcademicSchedule | |
+
+DB는 하나이고, 계정별 데이터는 `student_id` 외래키로 구분됩니다. 수강신청·시간표·휴학/장학금 신청내역은
+모두 로그인한 학생의 `id`로만 조회·저장하므로 학생마다 자기 데이터만 보입니다.
 
 DB 내용은 `http://localhost:8080/h2-console` 또는 IntelliJ Database 창에서 볼 수 있습니다
 (접속 정보는 `application.properties` 주석 참고).

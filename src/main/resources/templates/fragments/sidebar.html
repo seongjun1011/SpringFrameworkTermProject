@@ -14,6 +14,7 @@
     <div class="menu-group">
         <div class="menu-group-title">학적 / 학생</div>
         <a class="menu-item" th:classappend="${active == 'mypage'} ? 'active'" th:href="@{/mypage}">개인신상정보수정</a>
+        <a class="menu-item" th:classappend="${active == 'password'} ? 'active'" th:href="@{/password/change}">비밀번호변경</a>
         <a class="menu-item" th:classappend="${active == 'schedule'} ? 'active'" th:href="@{/schedule}">학사일정조회</a>
         <a class="menu-item" th:classappend="${active == 'leave'} ? 'active'" th:href="@{/leave}">휴학/복학신청</a>
         <a class="menu-item disabled" href="#" onclick="return false;">증명서발급신청</a>
