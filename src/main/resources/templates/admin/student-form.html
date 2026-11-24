@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>학생 학적 등록 - 학사관리시스템</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<header th:replace="~{fragments/admin :: header}"></header>
+
+<div class="app-body">
+    <aside th:replace="~{fragments/admin :: sidebar('student-new')}"></aside>
+
+    <div class="app-content">
+        <div class="breadcrumb">학적 관리 &gt; 학생 학적 등록</div>
+        <h2 class="page-title">학생 학적 등록</h2>
+        <p class="page-desc">등록하면 학생 계정이 만들어지고, 초기 비밀번호는 생년월일 6자리(예: 2005-07-22 → 050722)로 발급됩니다.
+            학생은 최초 로그인 시 비밀번호를 변경해야 합니다.</p>
+
+        <div class="alert error" th:if="${error}" th:text="${error}"></div>
+
+        <div class="card" style="max-width: 560px;">
+            <form th:action="@{/admin/students/new}" method="post">
+                <div class="form-row">
+                    <label for="loginId">학번 (숫자 10자리)</label>
+                    <input type="text" id="loginId" name="loginId" th:value="${loginId}"
+                           pattern="[0-9]{10}" maxlength="10" inputmode="numeric" placeholder="예) 2501110001" required>
+                </div>
+                <div class="form-row">
+                    <label for="name">이름</label>
+                    <input type="text" id="name" name="name" th:value="${name}" maxlength="30" required>
+                </div>
+                <div class="form-row">
+                    <label for="birthDate">생년월일</label>
+                    <input type="date" id="birthDate" name="birthDate" th:value="${birthDate}" required>
+                </div>
+                <div class="form-row">
+                    <label for="department">학과</label>
+                    <select id="department" name="department">
+                        <option th:each="d : ${departments}" th:value="${d}" th:text="${d}"
+                                th:selected="${d == department}">학과</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label for="campus">캠퍼스</label>
+                    <select id="campus" name="campus">
+                        <option th:each="c : ${campuses}" th:value="${c}" th:text="${c}"
+                                th:selected="${c == campus}">캠퍼스</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label for="grade">학년</label>
+                    <select id="grade" name="grade">
+                        <option th:each="g : ${grades}" th:value="${g}" th:text="${g}"
+                                th:selected="${g == grade}">학년</option>
+                    </select>
+                </div>
+                <button type="submit" class="btn">등록</button>
+                <a class="btn btn-outline" th:href="@{/admin/students}">목록으로</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

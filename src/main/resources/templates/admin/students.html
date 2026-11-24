@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>학생 목록 조회 - 학사관리시스템</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<header th:replace="~{fragments/admin :: header}"></header>
+
+<div class="app-body">
+    <aside th:replace="~{fragments/admin :: sidebar('students')}"></aside>
+
+    <div class="app-content">
+        <div class="breadcrumb">학적 관리 &gt; 학생 목록 조회</div>
+        <h2 class="page-title">학생 목록 조회</h2>
+        <p class="page-desc">학번 또는 이름으로 검색하고, 잠긴 계정을 해제하거나 비밀번호를 생년월일로 초기화할 수 있습니다.</p>
+
+        <div class="alert success" th:if="${success}" th:text="${success}"></div>
+        <div class="alert error" th:if="${error}" th:text="${error}"></div>
+
+        <div class="card">
+            <form class="search-bar" th:action="@{/admin/students}" method="get">
+                <input type="text" name="q" th:value="${q}" placeholder="학번 또는 이름">
+                <button type="submit" class="btn btn-sm">검색</button>
+                <a class="btn btn-sm btn-outline" th:href="@{/admin/students/new}">학생 학적 등록</a>
+            </form>
+
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>학번</th>
+                    <th>이름</th>
+                    <th>학과 / 학년</th>
+                    <th>생년월일</th>
+                    <th>계정 상태</th>
+                    <th>마지막 로그인</th>
+                    <th>관리</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="s : ${students.content}">
+                    <td th:text="${s.loginId}">2301110329</td>
+                    <td th:text="${s.name}">이름</td>
+                    <td th:text="${s.department + ' / ' + s.grade}">학과</td>
+                    <td th:text="${s.birthDate != null ? #temporals.format(s.birthDate, 'yyyy-MM-dd') : '-'}">-</td>
+                    <td>
+                        <span class="badge rejected" th:if="${s.locked}">잠김</span>
+                        <span class="badge pending" th:if="${!s.locked and s.passwordChangeRequired}">초기 비밀번호</span>
+                        <span class="badge approved" th:if="${!s.locked and !s.passwordChangeRequired}">정상</span>
+                    </td>
+                    <td th:text="${s.lastLoginAt != null ? #temporals.format(s.lastLoginAt, 'yyyy-MM-dd HH:mm') : '-'}">-</td>
+                    <td class="row-actions">
+                        <form th:if="${s.locked}" th:action="@{/admin/students/{id}/unlock(id=${s.id})}" method="post">
+                            <input type="hidden" name="q" th:value="${q}">
+                            <input type="hidden" name="page" th:value="${students.number}">
+                            <button type="submit" class="btn btn-sm">잠금 해제</button>
+                        </form>
+                        <form th:action="@{/admin/students/{id}/reset-password(id=${s.id})}" method="post"
+                              th:attr="onsubmit=|return confirm('${s.name} 학생의 비밀번호를 생년월일 6자리로 초기화할까요?');|">
+                            <input type="hidden" name="q" th:value="${q}">
+                            <input type="hidden" name="page" th:value="${students.number}">
+                            <button type="submit" class="btn btn-sm btn-outline">비밀번호 초기화</button>
+                        </form>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="empty-state" th:if="${students.content.isEmpty()}">검색 결과가 없습니다.</div>
+
+            <div class="pagination" th:if="${students.totalPages > 1}">
+                <a th:each="i : ${#numbers.sequence(0, students.totalPages - 1)}"
+                   th:href="@{/admin/students(q=${q}, page=${i})}"
+                   th:text="${i + 1}"
+                   th:classappend="${i == students.number} ? 'active'">1</a>
+            </div>
+            <p class="list-count" th:text="${'전체 ' + students.totalElements + '명'}">전체 0명</p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

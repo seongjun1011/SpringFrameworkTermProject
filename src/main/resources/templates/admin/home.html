@@ -36,6 +36,14 @@
                 <ul class="simple-list">
                     <li>등록 학생 수 <span class="item-date" th:text="${studentCount + '명'}">0명</span></li>
                     <li>잠긴 학생 계정 <span class="item-date" th:text="${lockedCount + '건'}">0건</span></li>
+                    <li><a th:href="@{/admin/students/new}">학생 학적 등록 →</a></li>
+                </ul>
+            </div>
+
+            <div class="card" th:if="${staff.role.approver}">
+                <div class="card-title">내 결재 <a class="more-link" th:href="@{/admin/approvals}">결재함 →</a></div>
+                <ul class="simple-list">
+                    <li>내 차례인 결재 <span class="item-date" th:text="${myPendingCount + '건'}">0건</span></li>
                 </ul>
             </div>
 

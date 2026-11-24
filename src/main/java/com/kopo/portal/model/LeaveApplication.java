@@ -12,7 +12,7 @@ import java.util.List;
  */
 @Entity
 @Table(name = "leave_applications")
-public class LeaveApplication {
+public class LeaveApplication implements ApprovalDocument {
 
     public static final String STATUS_PENDING  = "처리중";
     public static final String STATUS_APPROVED = "승인";
@@ -64,8 +64,8 @@ public class LeaveApplication {
 
     /** 결재 단계 상태로부터 전체 상태를 다시 계산한다. */
     public void recalcStatus() {
-        boolean anyRejected = approvalSteps.stream().anyMatch(s -> "반려".equals(s.getStatus()));
-        boolean allApproved = approvalSteps.stream().allMatch(s -> "승인".equals(s.getStatus()));
+        boolean anyRejected = approvalSteps.stream().anyMatch(s -> ApprovalStep.REJECTED.equals(s.getStatus()));
+        boolean allApproved = approvalSteps.stream().allMatch(s -> ApprovalStep.APPROVED.equals(s.getStatus()));
         if (anyRejected) this.status = STATUS_REJECTED;
         else if (allApproved) this.status = STATUS_APPROVED;
         else this.status = STATUS_PENDING;

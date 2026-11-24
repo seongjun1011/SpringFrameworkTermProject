@@ -6,6 +6,7 @@ import com.kopo.portal.model.Staff;
 import com.kopo.portal.repository.LeaveApplicationRepository;
 import com.kopo.portal.repository.ScholarshipApplicationRepository;
 import com.kopo.portal.repository.StudentRepository;
+import com.kopo.portal.service.ApprovalService;
 import com.kopo.portal.service.StaffService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
@@ -25,14 +26,17 @@ import java.util.Optional;
 public class AdminLoginController {
 
     private final StaffService staffService;
+    private final ApprovalService approvalService;
     private final StudentRepository studentRepository;
     private final LeaveApplicationRepository leaveRepository;
     private final ScholarshipApplicationRepository scholarshipRepository;
 
-    public AdminLoginController(StaffService staffService, StudentRepository studentRepository,
+    public AdminLoginController(StaffService staffService, ApprovalService approvalService,
+                                StudentRepository studentRepository,
                                 LeaveApplicationRepository leaveRepository,
                                 ScholarshipApplicationRepository scholarshipRepository) {
         this.staffService = staffService;
+        this.approvalService = approvalService;
         this.studentRepository = studentRepository;
         this.leaveRepository = leaveRepository;
         this.scholarshipRepository = scholarshipRepository;
@@ -80,6 +84,9 @@ public class AdminLoginController {
         if (staff.getRole().isAcademicAdmin()) {
             model.addAttribute("studentCount", studentRepository.count());
             model.addAttribute("lockedCount", studentRepository.countByLockedTrue());
+        }
+        if (staff.getRole().isApprover()) {
+            model.addAttribute("myPendingCount", approvalService.findPendingFor(staff).size());
         }
         model.addAttribute("pendingLeave", leaveRepository.countByStatus(LeaveApplication.STATUS_PENDING));
         model.addAttribute("pendingScholarship",

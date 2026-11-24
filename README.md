@@ -56,6 +56,15 @@
 - 교직원(관리자) 로그인 / 로그아웃 / 관리자 홈 (`staffs` 테이블, 학생 세션과 분리)
   - 역할: 학사관리자(학적·수업·게시판 관리), 결재자(담당직원·학과장·장학위원회·학생처장 – 결재함)
   - 다른 역할의 메뉴에 접근하면 관리자 홈으로 돌려보내고 안내 메시지 표시
+- 학적 관리 (학사관리자)
+  - 학생 학적 등록: 학번(숫자 10자리)·이름·생년월일·학과·캠퍼스·학년 입력 → 초기 비밀번호(생년월일 6자리) 발급
+  - 학생 목록 조회: 학번·이름 검색, 페이징(`Pageable`), 계정 상태(정상 / 초기 비밀번호 / 잠김) 표시
+  - 계정 잠금 해제, 비밀번호 생년월일로 초기화
+- 결재함 (결재자: 담당직원·학과장·장학위원회·학생처장)
+  - 앞 단계가 모두 승인되어 **내 역할의 차례**가 된 휴학·복학 / 장학금 신청만 표시
+  - 승인·반려(반려 시 의견 필수), 처리자는 결재단계의 `processed_by`(→ `staffs.id`)로 기록
+  - 반려되면 이후 단계는 진행되지 않고 신청 상태가 "반려"로, 마지막 단계까지 승인되면 "승인"으로 바뀜
+  - 내가 처리한 결재 목록
 - 통합포털 홈 (날씨, 주간 시간표, 학사일정, 채용정보, 공지사항 위젯)
 - 수강신청 / 수강신청내역조회 (정원 초과·중복 신청·수업 시간 충돌 검증, 신청 시 confirm 확인창)
 - 개인시간표조회 (교시×요일 격자, 과목별 색상 구분, 신청과목수·주간수업일수 요약)
@@ -82,8 +91,8 @@
 | staffs | Staff | 사번(유일)·이름·소속·역할(`@Enumerated(STRING)`) |
 | courses | Course | |
 | enrollments | Enrollment | students N:1, courses N:1 (학생-강좌 N:M 연결) |
-| leave_applications (+ _steps, _files) | LeaveApplication | students N:1 |
-| scholarship_applications (+ _steps, _files) | ScholarshipApplication | students N:1 |
+| leave_applications (+ _steps, _files) | LeaveApplication | students N:1, 결재단계 processed_by → staffs |
+| scholarship_applications (+ _steps, _files) | ScholarshipApplication | students N:1, 결재단계 processed_by → staffs |
 | notices / job_postings / academic_schedules | Notice / JobPosting / AcademicSchedule | |
 
 DB는 하나이고, 계정별 데이터는 `student_id` 외래키로 구분됩니다. 수강신청·시간표·휴학/장학금 신청내역은

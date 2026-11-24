@@ -6,6 +6,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -132,6 +136,67 @@ public class StudentService {
         s.setPasswordChangeRequired(true);
         s.setLoginFailCount(0);
         s.setLocked(false);
+        return null;
+    }
+
+    // ===== 학사관리자용 =====
+
+    /**
+     * 학생 학적 등록. 초기 비밀번호는 생년월일 6자리(yyMMdd)이며 최초 로그인 시 변경해야 한다.
+     * @return 성공 시 null, 실패 시 에러 메시지
+     */
+    @Transactional
+    public String register(String loginId, String name, String department, String campus,
+                           String grade, LocalDate birthDate) {
+        String id = loginId == null ? "" : loginId.trim();
+        String nm = name == null ? "" : name.trim();
+        if (!id.matches("\\d{10}")) {
+            return "학번은 숫자 10자리로 입력하세요. (예: 2501110001)";
+        }
+        if (nm.isEmpty() || nm.length() > 30) {
+            return "이름을 1~30자로 입력하세요.";
+        }
+        if (birthDate == null || !birthDate.isBefore(LocalDate.now())) {
+            return "생년월일을 올바르게 입력하세요.";
+        }
+        if (studentRepository.existsByLoginId(id)) {
+            return "이미 등록된 학번입니다.";
+        }
+        Student s = Student.register(id, null, nm, department, campus, grade, birthDate);
+        s.setPassword(passwordEncoder.encode(s.getBirthDateCode()));
+        studentRepository.save(s);
+        return null;
+    }
+
+    /** 학번 또는 이름으로 검색 (검색어가 없으면 전체) */
+    public Page<Student> search(String keyword, Pageable pageable) {
+        String q = keyword == null ? "" : keyword.trim();
+        return studentRepository.findByLoginIdContainingOrNameContaining(q, q, pageable);
+    }
+
+    /** 계정 잠금 해제 (로그인 실패 횟수 초기화) */
+    @Transactional
+    public Student unlock(Long id) {
+        Student s = studentRepository.findById(id).orElseThrow();
+        s.setLocked(false);
+        s.setLoginFailCount(0);
+        return s;
+    }
+
+    /**
+     * 학사관리자가 비밀번호를 생년월일로 초기화 (잠금도 해제, 다음 로그인 시 변경 필요).
+     * @return 성공 시 null, 실패 시 에러 메시지
+     */
+    @Transactional
+    public String resetByAdmin(Long id) {
+        Student s = studentRepository.findById(id).orElseThrow();
+        if (s.getBirthDateCode() == null) {
+            return "생년월일 정보가 없어 초기화할 수 없습니다.";
+        }
+        s.setPassword(passwordEncoder.encode(s.getBirthDateCode()));
+        s.setPasswordChangeRequired(true);
+        s.setLocked(false);
+        s.setLoginFailCount(0);
         return null;
     }
 

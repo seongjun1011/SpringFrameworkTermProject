@@ -1,7 +1,6 @@
 package com.kopo.portal.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Embeddable;
+import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 
@@ -12,6 +11,10 @@ import java.time.LocalDateTime;
  */
 @Embeddable
 public class ApprovalStep {
+
+    public static final String WAITING  = "대기중";
+    public static final String APPROVED = "승인";
+    public static final String REJECTED = "반려";
 
     @Column(name = "approver_role", length = 30)
     private String role;
@@ -27,28 +30,42 @@ public class ApprovalStep {
     @Column(name = "step_comment")
     private String comment;
 
+    /** 이 단계를 처리한 교직원 (대기 중이면 null) → staffs.id 외래키 */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "processed_by")
+    private Staff processedBy;
+
     protected ApprovalStep() {
     }
 
     public ApprovalStep(String role, String approverName) {
         this.role = role;
         this.approverName = approverName;
-        this.status = "대기중";
+        this.status = WAITING;
     }
 
     public void approve(String comment, LocalDateTime at) {
-        this.status = "승인";
+        this.status = APPROVED;
         this.comment = comment;
         this.processedAt = at;
     }
 
     public void reject(String comment, LocalDateTime at) {
-        this.status = "반려";
+        this.status = REJECTED;
         this.comment = comment;
         this.processedAt = at;
     }
 
+    /** 교직원이 결재함에서 승인/반려할 때: 처리자와 실제 결재자 이름을 함께 기록한다. */
+    public void decide(boolean approve, Staff staff, String comment, LocalDateTime at) {
+        if (approve) approve(comment, at);
+        else reject(comment, at);
+        this.processedBy = staff;
+        this.approverName = staff.getName();
+    }
+
     public String getRole() { return role; }
+    public Staff getProcessedBy() { return processedBy; }
     public String getApproverName() { return approverName; }
     public String getStatus() { return status; }
     public void setStatus(String status) { this.status = status; }

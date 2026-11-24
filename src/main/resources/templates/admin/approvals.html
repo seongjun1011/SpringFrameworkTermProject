@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>결재함 - 학사관리시스템</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<header th:replace="~{fragments/admin :: header}"></header>
+
+<div class="app-body">
+    <aside th:replace="~{fragments/admin :: sidebar('approvals')}"></aside>
+
+    <div class="app-content">
+        <div class="breadcrumb">결재 &gt; 결재함</div>
+        <h2 class="page-title">결재함</h2>
+        <p class="page-desc" th:text="${session.loginStaff.role.label + ' 결재 차례가 된 휴학·복학, 장학금 신청입니다. 앞 단계가 모두 승인된 신청만 표시됩니다.'}">안내</p>
+
+        <div class="alert success" th:if="${success}" th:text="${success}"></div>
+        <div class="alert error" th:if="${error}" th:text="${error}"></div>
+
+        <div class="card">
+            <div class="card-title" th:text="${'결재 대기 (' + pending.size() + '건)'}">결재 대기</div>
+            <div class="empty-state" th:if="${pending.isEmpty()}">결재할 신청이 없습니다.</div>
+
+            <div class="app-entry" th:each="a : ${pending}">
+                <div class="entry-head">
+                    <span class="badge pending" th:text="${a.kindLabel}">휴학·복학</span>
+                    <strong th:text="${a.applyType}">휴학</strong>
+                    <span class="entry-meta" th:text="${a.studentName + ' (' + a.studentNo + ') · ' + a.department + ' · 신청일 ' + #temporals.format(a.appliedAt, 'yyyy-MM-dd')}">학생</span>
+                </div>
+                <p class="entry-reason" th:text="${a.reason}">사유</p>
+                <div class="entry-files" th:if="${!a.fileNames.isEmpty()}">
+                    첨부파일: <span th:each="f, fs : ${a.fileNames}" th:text="${f + (fs.last ? '' : ', ')}">파일</span>
+                </div>
+
+                <div class="approval-flow">
+                    <th:block th:each="step, st : ${a.steps}">
+                        <div th:class="${'step-box ' + (step.status == '승인' ? 'ok' : (step.status == '반려' ? 'ng' : (st.index == a.currentStep ? 'now' : 'wait')))}">
+                            <div class="step-role" th:text="${step.role}">역할</div>
+                            <div class="step-name" th:text="${step.approverName}">이름</div>
+                            <div class="step-date" th:text="${st.index == a.currentStep ? '내 차례' : step.status}">대기중</div>
+                        </div>
+                        <span class="step-arrow" th:unless="${st.last}">→</span>
+                    </th:block>
+                </div>
+
+                <form class="decide-form" method="post" th:action="@{/admin/approvals/{k}/{id}/approve(k=${a.kind}, id=${a.id})}">
+                    <input type="text" name="comment" maxlength="200" placeholder="의견 (반려 시 필수)">
+                    <button type="submit" class="btn btn-sm"
+                            onclick="return confirm('이 신청을 승인할까요?');">승인</button>
+                    <button type="submit" class="btn btn-sm btn-danger"
+                            th:formaction="@{/admin/approvals/{k}/{id}/reject(k=${a.kind}, id=${a.id})}"
+                            onclick="return confirm('이 신청을 반려할까요? 반려하면 이후 단계는 진행되지 않습니다.');">반려</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card" style="margin-top: 16px;">
+            <div class="card-title" th:text="${'내가 처리한 결재 (' + processed.size() + '건)'}">내가 처리한 결재</div>
+            <table class="data-table" th:if="${!processed.isEmpty()}">
+                <thead>
+                <tr>
+                    <th>구분</th>
+                    <th>신청 종류</th>
+                    <th>학생</th>
+                    <th>처리 일시</th>
+                    <th>신청 상태</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="a : ${processed}">
+                    <td th:text="${a.kindLabel}">휴학·복학</td>
+                    <td th:text="${a.applyType}">휴학</td>
+                    <td th:text="${a.studentName + ' (' + a.studentNo + ')'}">학생</td>
+                    <td th:text="${a.myProcessedAt != null ? #temporals.format(a.myProcessedAt, 'yyyy-MM-dd HH:mm') : '-'}">-</td>
+                    <td>
+                        <span th:class="${'badge ' + (a.status == '승인' ? 'approved' : (a.status == '반려' ? 'rejected' : 'pending'))}"
+                              th:text="${a.status}">처리중</span>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="empty-state" th:if="${processed.isEmpty()}">처리한 결재가 없습니다.</div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
