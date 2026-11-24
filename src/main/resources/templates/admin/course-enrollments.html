@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>수강신청 현황 - 학사관리시스템</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<header th:replace="~{fragments/admin :: header}"></header>
+
+<div class="app-body">
+    <aside th:replace="~{fragments/admin :: sidebar('courses')}"></aside>
+
+    <div class="app-content">
+        <div class="breadcrumb">수업 관리 &gt; 강좌별 수강신청 현황</div>
+        <h2 class="page-title" th:text="${course.name + ' 수강신청 현황'}">수강신청 현황</h2>
+        <p class="page-desc"
+           th:text="${course.professor + ' · ' + course.dayOfWeek + ' ' + course.period + ' · ' + course.location + ' · 신청 ' + course.enrolledCount + ' / 정원 ' + course.capacity}">강좌 정보</p>
+
+        <div class="card">
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>번호</th>
+                    <th>학번</th>
+                    <th>이름</th>
+                    <th>학과 / 학년</th>
+                    <th>신청 일시</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="e, st : ${enrollments}">
+                    <td th:text="${st.count}">1</td>
+                    <td th:text="${e.student.loginId}">학번</td>
+                    <td th:text="${e.student.name}">이름</td>
+                    <td th:text="${e.student.department + ' / ' + e.student.grade}">학과</td>
+                    <td th:text="${#temporals.format(e.appliedAt, 'yyyy-MM-dd HH:mm')}">일시</td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="empty-state" th:if="${enrollments.isEmpty()}">아직 신청한 학생이 없습니다.</div>
+            <p style="margin-top: 14px;"><a class="btn btn-sm btn-outline" th:href="@{/admin/courses}">강좌 목록으로</a></p>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

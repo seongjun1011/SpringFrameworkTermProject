@@ -85,6 +85,11 @@ public class EnrollmentService {
         return enrollmentRepository.findByStudentIdOrderByAppliedAtAsc(studentId);
     }
 
+    /** 학사관리자용: 강좌별 수강신청 현황 */
+    public List<Enrollment> findByCourse(Long courseId) {
+        return enrollmentRepository.findByCourseIdOrderByAppliedAtAsc(courseId);
+    }
+
     /** 로그인한 학생이 신청한 과목 목록(Course)을 반환한다. */
     public List<Course> findEnrolledCourses(Long studentId) {
         return findByStudent(studentId).stream().map(Enrollment::getCourse).toList();

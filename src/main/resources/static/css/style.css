@@ -656,3 +656,10 @@ table.data-table tbody tr:last-child td {
 .step-arrow { color: var(--color-text-light); font-size: 14px; padding: 0 6px; }
 .decide-form { display: flex; gap: 6px; margin-top: 12px; }
 .decide-form input { flex: 1; max-width: 420px; padding: 7px 10px; border: 1px solid var(--color-border); border-radius: 5px; font-size: 13px; }
+
+/* 관리자 폼: 두 칸 나란히 */
+.form-row-inline { display: flex; gap: 12px; }
+.form-row-inline > div { flex: 1; }
+.form-row-inline label { display: block; }
+.form-note { font-size: 12px; color: var(--color-text-light); margin: 0 0 10px; }
+.row-actions .btn { margin-right: 4px; }

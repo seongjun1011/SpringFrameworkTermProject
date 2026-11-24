@@ -11,4 +11,6 @@ public interface AcademicScheduleRepository extends JpaRepository<AcademicSchedu
     /** 기간이 [from, to] 구간과 겹치는 일정 (startDate <= to AND endDate >= from) */
     List<AcademicSchedule> findByStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByStartDateAsc(
             LocalDate to, LocalDate from);
+
+    List<AcademicSchedule> findAllByOrderByStartDateDesc();
 }

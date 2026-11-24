@@ -60,6 +60,13 @@
   - 학생 학적 등록: 학번(숫자 10자리)·이름·생년월일·학과·캠퍼스·학년 입력 → 초기 비밀번호(생년월일 6자리) 발급
   - 학생 목록 조회: 학번·이름 검색, 페이징(`Pageable`), 계정 상태(정상 / 초기 비밀번호 / 잠김) 표시
   - 계정 잠금 해제, 비밀번호 생년월일로 초기화
+- 수업 관리 (학사관리자)
+  - 강좌 개설·수정: 요일(월~금)·교시(1~6)·강의실·정원 검증, 같은 강의실·같은 시간 강좌 중복 금지
+  - 신청한 학생이 있는 강좌는 요일·교시 변경 불가, 정원은 현재 신청 인원 이상으로만 수정 (행 잠금 후 수정)
+  - 강좌별 수강신청 현황 (신청 학생 목록)
+- 게시판 관리 (학사관리자)
+  - 공지사항 작성: 작성 교직원을 `notices.staff_id`(→ `staffs.id`)로 연결, 학생 공지사항·대시보드에 바로 표시
+  - 학사일정 등록: 하루 일정은 종료일 생략 가능, 학생 학사일정조회(월별)에 표시
 - 결재함 (결재자: 담당직원·학과장·장학위원회·학생처장)
   - 앞 단계가 모두 승인되어 **내 역할의 차례**가 된 휴학·복학 / 장학금 신청만 표시
   - 승인·반려(반려 시 의견 필수), 처리자는 결재단계의 `processed_by`(→ `staffs.id`)로 기록
@@ -93,7 +100,8 @@
 | enrollments | Enrollment | students N:1, courses N:1 (학생-강좌 N:M 연결) |
 | leave_applications (+ _steps, _files) | LeaveApplication | students N:1, 결재단계 processed_by → staffs |
 | scholarship_applications (+ _steps, _files) | ScholarshipApplication | students N:1, 결재단계 processed_by → staffs |
-| notices / job_postings / academic_schedules | Notice / JobPosting / AcademicSchedule | |
+| notices | Notice | 작성 교직원 staff_id → staffs |
+| job_postings / academic_schedules | JobPosting / AcademicSchedule | |
 
 DB는 하나이고, 계정별 데이터는 `student_id` 외래키로 구분됩니다. 수강신청·시간표·휴학/장학금 신청내역은
 모두 로그인한 학생의 `id`로만 조회·저장하므로 학생마다 자기 데이터만 보입니다.

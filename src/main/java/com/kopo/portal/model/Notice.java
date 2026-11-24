@@ -24,6 +24,11 @@ public class Notice {
     private String writer;
     private LocalDateTime createdAt;
 
+    /** 작성한 교직원 → staffs.id 외래키 (초기 데모 공지는 null) */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "staff_id")
+    private Staff staff;
+
     public Notice() {
     }
 
@@ -32,6 +37,16 @@ public class Notice {
         this.content = content;
         this.writer = writer;
         this.createdAt = createdAt;
+    }
+
+    /** 교직원이 관리자 화면에서 작성하는 공지 */
+    public Notice(String title, String content, Staff staff, LocalDateTime createdAt) {
+        this(title, content, staff.getDepartment(), createdAt);
+        this.staff = staff;
+    }
+
+    public Staff getStaff() {
+        return staff;
     }
 
     public Long getId() {

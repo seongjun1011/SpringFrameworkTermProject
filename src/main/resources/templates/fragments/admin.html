@@ -37,12 +37,12 @@
         </div>
         <div class="menu-group">
             <div class="menu-group-title">수업 관리</div>
-            <a class="menu-item disabled" href="#" onclick="return false;">강좌 개설 · 수정</a>
+            <a class="menu-item" th:classappend="${active == 'courses'} ? 'active'" th:href="@{/admin/courses}">강좌 개설 · 수정</a>
         </div>
         <div class="menu-group">
             <div class="menu-group-title">게시판 관리</div>
-            <a class="menu-item disabled" href="#" onclick="return false;">공지사항 작성</a>
-            <a class="menu-item disabled" href="#" onclick="return false;">학사일정 등록</a>
+            <a class="menu-item" th:classappend="${active == 'notices'} ? 'active'" th:href="@{/admin/notices/new}">공지사항 작성</a>
+            <a class="menu-item" th:classappend="${active == 'schedules'} ? 'active'" th:href="@{/admin/schedules/new}">학사일정 등록</a>
         </div>
     </th:block>
 

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>강좌 관리 - 학사관리시스템</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<header th:replace="~{fragments/admin :: header}"></header>
+
+<div class="app-body">
+    <aside th:replace="~{fragments/admin :: sidebar('courses')}"></aside>
+
+    <div class="app-content">
+        <div class="breadcrumb">수업 관리 &gt; 강좌 개설 · 수정</div>
+        <h2 class="page-title">강좌 관리</h2>
+        <p class="page-desc">개설된 강좌와 신청 현황입니다. 신청한 학생이 있는 강좌는 정원을 늘리거나 강의실·교수를 바꿀 수 있지만, 요일·교시는 바꿀 수 없습니다.</p>
+
+        <div class="alert success" th:if="${success}" th:text="${success}"></div>
+
+        <div class="card">
+            <div class="search-bar">
+                <span th:text="${'개설 강좌 ' + courses.size() + '개'}">개설 강좌</span>
+                <a class="btn btn-sm btn-outline" th:href="@{/admin/courses/new}">강좌 개설</a>
+            </div>
+            <table class="data-table">
+                <thead>
+                <tr>
+                    <th>과목명</th>
+                    <th>담당교수</th>
+                    <th>요일/교시</th>
+                    <th>강의실</th>
+                    <th>신청 / 정원</th>
+                    <th>관리</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="c : ${courses}">
+                    <td th:text="${c.name}">과목명</td>
+                    <td th:text="${c.professor}">교수</td>
+                    <td th:text="${c.dayOfWeek + ' ' + c.period}">월 1-2교시</td>
+                    <td th:text="${c.location}">201호</td>
+                    <td>
+                        <span th:text="${c.enrolledCount + ' / ' + c.capacity}">0 / 30</span>
+                        <span class="badge full" th:if="${c.full}">마감</span>
+                    </td>
+                    <td class="row-actions">
+                        <a class="btn btn-sm btn-outline" th:href="@{/admin/courses/{id}/enrollments(id=${c.id})}">수강 현황</a>
+                        <a class="btn btn-sm" th:href="@{/admin/courses/{id}/edit(id=${c.id})}">수정</a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+            <div class="empty-state" th:if="${courses.isEmpty()}">개설된 강좌가 없습니다.</div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

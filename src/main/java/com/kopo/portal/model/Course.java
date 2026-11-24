@@ -48,6 +48,23 @@ public class Course {
         this.enrolledCount = 0;
     }
 
+    /** 학사관리자의 강좌 수정 (검증은 CourseService에서 한다) */
+    public void update(String name, String professor, String dayOfWeek,
+                       int startPeriod, int endPeriod, String location, int capacity) {
+        this.name = name;
+        this.professor = professor;
+        this.dayOfWeek = dayOfWeek;
+        this.startPeriod = startPeriod;
+        this.endPeriod = endPeriod;
+        this.location = location;
+        this.capacity = capacity;
+    }
+
+    /** 같은 요일에 교시 범위가 겹치는지 */
+    public boolean overlaps(String day, int start, int end) {
+        return dayOfWeek.equals(day) && startPeriod <= end && start <= endPeriod;
+    }
+
     public boolean isFull() {
         return enrolledCount >= capacity;
     }

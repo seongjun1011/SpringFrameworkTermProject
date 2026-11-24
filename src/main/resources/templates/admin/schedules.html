@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>학사일정 관리 - 학사관리시스템</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<header th:replace="~{fragments/admin :: header}"></header>
+
+<div class="app-body">
+    <aside th:replace="~{fragments/admin :: sidebar('schedules')}"></aside>
+
+    <div class="app-content">
+        <div class="breadcrumb">게시판 관리 &gt; 학사일정 등록</div>
+        <h2 class="page-title">학사일정 등록</h2>
+        <p class="page-desc">등록한 일정은 학생 화면의 학사일정조회(월별)와 대시보드에 표시됩니다. 하루짜리 일정은 종료일을 비워 두세요.</p>
+
+        <div class="alert success" th:if="${success}" th:text="${success}"></div>
+        <div class="alert error" th:if="${error}" th:text="${error}"></div>
+
+        <div class="card" style="max-width: 560px;">
+            <form th:action="@{/admin/schedules/new}" method="post">
+                <div class="form-row">
+                    <label for="title">일정명</label>
+                    <input type="text" id="title" name="title" th:value="${title}" maxlength="100"
+                           placeholder="예) 2학기 수강신청" required>
+                </div>
+                <div class="form-row form-row-inline">
+                    <div>
+                        <label for="startDate">시작일</label>
+                        <input type="date" id="startDate" name="startDate" th:value="${startDate}" required>
+                    </div>
+                    <div>
+                        <label for="endDate">종료일 (선택)</label>
+                        <input type="date" id="endDate" name="endDate" th:value="${endDate}">
+                    </div>
+                </div>
+                <button type="submit" class="btn">등록</button>
+            </form>
+        </div>
+
+        <div class="card" style="margin-top: 16px;">
+            <div class="card-title">등록된 학사일정</div>
+            <table class="data-table">
+                <thead>
+                <tr><th>기간</th><th>일정명</th></tr>
+                </thead>
+                <tbody>
+                <tr th:each="s : ${schedules}">
+                    <td th:text="${#temporals.format(s.startDate, 'yyyy-MM-dd') + (s.endDate == s.startDate ? '' : ' ~ ' + #temporals.format(s.endDate, 'yyyy-MM-dd'))}">기간</td>
+                    <td th:text="${s.title}">일정</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
