@@ -12,11 +12,13 @@
 - HandlerInterceptor를 이용한 접근 제어
   - 학생 화면: `LoginInterceptor` (로그인·초기 비밀번호 변경 여부 검사)
   - 교직원 화면(`/admin/**`): `AdminInterceptor` (교직원 로그인·역할 검사)
-- Spring Data JPA + H2(파일 DB)로 회원·강좌·수강신청·휴학/장학금신청·공지·채용·학사일정 데이터를 DB에 저장
+- Spring Data JPA + MySQL 8로 회원·강좌·수강신청·휴학/장학금신청·공지·채용·학사일정 데이터를 DB에 저장
 - 학사팀 사전 등록 계정 + 로그인 (BCrypt 비밀번호 해시, spring-security-crypto) — 회원가입 없음
 - OpenWeatherMap REST API 연동 (RestTemplate), 키 미설정 시 더미 데이터로 대체
 
 ## 실행 방법
+
+0. MySQL 8 서버 실행 (`localhost:3306`), `application.properties`의 계정으로 접속 가능해야 합니다.
 
 1. IntelliJ에서 프로젝트 열기 (Maven 프로젝트로 자동 인식)
 2. `StudentPortalApplication.java` 실행
@@ -88,7 +90,8 @@
 
 ## 데이터 관리 방식 (JPA)
 
-모든 데이터는 Spring Data JPA를 통해 H2 파일 DB(`./data/portaldb.mv.db`)에 저장되며, 서버를 재시작해도 유지됩니다.
+모든 데이터는 Spring Data JPA를 통해 MySQL 데이터베이스 `student-portal`에 저장되며, 서버를 재시작해도 유지됩니다.
+(접속 계정은 `application.properties` 참고. DB가 없으면 `createDatabaseIfNotExist=true` 옵션으로 자동 생성됩니다.)
 테이블은 엔티티 클래스를 기준으로 자동 생성되고(`ddl-auto=update`), 테이블이 비어 있을 때만
 `DataInitializer`가 데모 데이터(학생·교직원 계정, 강좌, 공지, 채용정보, 학사일정, 결재 진행 중인 신청 내역)를 넣습니다.
 
@@ -106,5 +109,4 @@
 DB는 하나이고, 계정별 데이터는 `student_id` 외래키로 구분됩니다. 수강신청·시간표·휴학/장학금 신청내역은
 모두 로그인한 학생의 `id`로만 조회·저장하므로 학생마다 자기 데이터만 보입니다.
 
-DB 내용은 `http://localhost:8080/h2-console` 또는 IntelliJ Database 창에서 볼 수 있습니다
-(접속 정보는 `application.properties` 주석 참고).
+DB 내용은 IntelliJ Database 창(MySQL, `localhost:3306`, DB `student-portal`) 또는 MySQL Workbench에서 볼 수 있습니다.

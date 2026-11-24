@@ -151,7 +151,7 @@ const body = [
     border: { left: { style: BorderStyle.SINGLE, size: 24, color: NAVY, space: 8 } },
     children: [r("1학년 때 제작한 학생정보시스템 홈페이지를 Spring Boot + Spring Data JPA 기반의 학사정보 통합포털 및 학사관리 시스템으로 재구성", { bold: true, size: 22 })] }),
   p("학생은 학사관리자가 발급한 학번과 초기 비밀번호로 로그인하여 비밀번호를 변경한 뒤, 통합포털 대시보드에서 주간 시간표·학사일정·공지사항·채용정보·날씨를 보고 수강신청, 개인시간표 조회, 개인신상정보 수정, 휴학·복학 및 장학금 신청을 할 수 있다."),
-  p("교직원은 별도의 관리자 화면에 로그인한다. 학사관리자는 학생 학적 등록, 강좌 개설, 공지사항·학사일정 등록을 하고, 결재자(담당직원·학과장·장학위원회·학생처장)는 자신의 차례가 된 휴학·장학금 신청을 승인하거나 반려한다. 결재 결과는 학생 화면의 결재 진행 상태에 바로 반영된다. 모든 데이터는 H2 파일 데이터베이스에 저장되어 서버를 재시작해도 유지된다."),
+  p("교직원은 별도의 관리자 화면에 로그인한다. 학사관리자는 학생 학적 등록, 강좌 개설, 공지사항·학사일정 등록을 하고, 결재자(담당직원·학과장·장학위원회·학생처장)는 자신의 차례가 된 휴학·장학금 신청을 승인하거나 반려한다. 결재 결과는 학생 화면의 결재 진행 상태에 바로 반영된다. 모든 데이터는 MySQL 데이터베이스에 저장되어 서버를 재시작해도 유지된다."),
 
   // 3. 개발 환경
   h1("3. 개발 환경 및 사용 기술"),
@@ -159,12 +159,12 @@ const body = [
     ["언어 / 빌드", "Java 17, Maven"],
     ["프레임워크", "Spring Boot 3.2.5 (Spring MVC, 내장 Tomcat)"],
     ["데이터 접근", "Spring Data JPA (구현체 Hibernate), JpaRepository, 메서드 이름 기반 쿼리, @Query(JPQL), Pageable 페이징"],
-    ["데이터베이스", "H2 Database (파일 모드, MySQL 호환 모드) – data/portaldb.mv.db, ddl-auto=update로 테이블 자동 생성"],
+    ["데이터베이스", "MySQL 8 (데이터베이스 student-portal, utf8mb4), MySQL Connector/J – ddl-auto=update로 엔티티 기준 테이블 자동 생성"],
     ["화면", "Thymeleaf 템플릿 엔진 (layout fragment로 헤더·사이드바 공통화), HTML/CSS, 관리자 화면 templates/admin/*.html"],
     ["인증 / 보안", "HttpSession 기반 로그인(학생 loginStudent / 교직원 loginStaff 분리), HandlerInterceptor로 접근 제어(LoginInterceptor, AdminInterceptor), 역할 기반 메뉴 제한, BCrypt 비밀번호 해시 (spring-security-crypto)"],
     ["외부 연동", "OpenWeatherMap REST API (RestTemplate) – 키 미설정 시 더미 데이터"],
     ["파일 업로드", "MultipartFile – uploads/ 폴더에 저장, DB에는 원본·저장 파일명 기록"],
-    ["도구", "IntelliJ IDEA, Git / GitHub, IntelliJ Database 창·H2 Console(DB 조회)"],
+    ["도구", "IntelliJ IDEA, Git / GitHub, IntelliJ Database 창·MySQL Workbench(DB 조회)"],
   ]),
   gap(),
 
@@ -227,7 +227,7 @@ const body = [
   h1("6. 시스템 설계도"),
   figure("1_시스템구성도.png"),
   caption("[그림 2] 시스템 구성도"),
-  bullet([r("요청 흐름: ", { bold: true }), r("브라우저 요청 → 인터셉터(학생: LoginInterceptor / 관리자: AdminInterceptor) → Controller → Service → Repository → Hibernate가 SQL 생성 → H2 DB")]),
+  bullet([r("요청 흐름: ", { bold: true }), r("브라우저 요청 → 인터셉터(학생: LoginInterceptor / 관리자: AdminInterceptor) → Controller → Service → Repository → Hibernate가 SQL 생성 → MySQL")]),
   bullet([r("응답 흐름: ", { bold: true }), r("Controller가 Model에 데이터를 담아 Thymeleaf 템플릿 이름을 반환 → 서버에서 HTML을 생성하여 응답")]),
   bullet([r("Controller: ", { bold: true }), r("학생용 10개 + 교직원(관리자)용 5개(AdminLogin, AdminStudent, AdminCourse, AdminBoard, Approval)")]),
   bullet([r("Service: ", { bold: true }), r("업무 규칙(정원·중복·비밀번호 정책·결재 순서)과 @Transactional 트랜잭션 경계. 교직원 기능은 StaffService, ApprovalService가 담당")]),

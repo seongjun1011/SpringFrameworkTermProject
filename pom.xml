@@ -52,10 +52,10 @@
             <artifactId>spring-security-crypto</artifactId>
         </dependency>
 
-        <!-- H2 파일 DB (설치 불필요). MySQL 사용 시 아래 mysql-connector-j 로 교체 -->
+        <!-- MySQL JDBC 드라이버 -->
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
         </dependency>
 

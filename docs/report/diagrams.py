@@ -170,8 +170,8 @@ s.arrow([(1100, 720), (1100, 758)])
 s.arrow([(610, 870), (610, 905), (110, 905), (110, 267)], "HTML 응답", (360, 905))
 s.arrow([(1230, 815), (1288, 815)], "JDBC", (1259, 798), size=12)
 
-s.cylinder(1290, 735, 220, 160, "H2 Database\n파일 DB · MySQL 모드\ndata/portaldb.mv.db")
-s.box(1400, 610, 210, 90, "IntelliJ Database 창\nH2 Console\n(/h2-console)", "ext", size=13)
+s.cylinder(1290, 735, 220, 160, "MySQL 8\nlocalhost:3306\nDB: student-portal")
+s.box(1400, 610, 210, 90, "IntelliJ Database 창\nMySQL Workbench", "ext", size=13)
 s.arrow([(1400, 655), (1400, 733)], "직접 조회", (1412, 695), anchor="start", dashed=True)
 
 s.box(790, 990, 170, 64, "uploads/ 폴더\n첨부파일 저장", "ext", size=13)

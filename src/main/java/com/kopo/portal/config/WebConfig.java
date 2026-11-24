@@ -12,7 +12,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 public class WebConfig implements WebMvcConfigurer {
 
     private static final String[] STATIC_AND_PUBLIC = {
-            "/h2-console/**", "/error", "/css/**", "/js/**", "/images/**", "/favicon.ico"
+            "/error", "/css/**", "/js/**", "/images/**", "/favicon.ico"
     };
 
     @Override
