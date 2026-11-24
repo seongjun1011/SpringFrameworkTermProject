@@ -51,8 +51,8 @@ class Svg:
         self.add(f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="{rx}" fill="{fill}" stroke="{stroke}" stroke-width="{sw}"{d}/>')
 
     def box(self, cx, cy, w, h, label, kind, size=14, weight=400, rx=8, planned=False):
-        fill, stroke = C["plan"] if planned else C[kind]
-        self.rect(cx - w / 2, cy - h / 2, w, h, fill, stroke, rx=rx, dash="6 4" if planned else None)
+        fill, stroke = C[kind]
+        self.rect(cx - w / 2, cy - h / 2, w, h, fill, stroke, rx=rx)
         self.text(cx, cy, label, size=size, weight=weight)
 
     def term(self, cx, cy, w, h, label, size=14):
@@ -76,14 +76,13 @@ class Svg:
 
     def layer(self, x, y, w, h, title, kind, items=(), body=None, item_h=34, gap=8, planned=False):
         fill, stroke = C[kind]
-        if planned:
-            fill, stroke = C["plan"]
-        self.rect(x, y, w, h, "#FFFFFF", stroke, rx=10, sw=1.8, dash="7 4" if planned else None)
+        self.rect(x, y, w, h, "#FFFFFF", stroke, rx=10, sw=1.8)
         self.add(f'<path d="M{x},{y + 40} V{y + 10} a10,10 0 0 1 10,-10 H{x + w - 10} a10,10 0 0 1 10,10 V{y + 40} Z" fill="{stroke}"/>')
         self.text(x + w / 2, y + 20, title, size=14, weight=700, fill="#FFFFFF")
         iy = y + 52
         for it in items:
-            if it.endswith(PLAN):   # 구현 예정 항목: 초록 점선
+            it = it[:-len(PLAN)] if it.endswith(PLAN) else it
+            if False:
                 pf, ps = C["plan"]
                 self.rect(x + 10, iy, w - 20, item_h, pf, ps, rx=6, sw=1.2, dash="5 3")
                 self.text(x + w / 2, iy + item_h / 2, it[:-len(PLAN)] + " *", size=13, fill="#1E6B41")
@@ -139,8 +138,8 @@ s.rect(250, 70, 1010, 860, "#FAFBFC", "#9AA5B1", rx=14, sw=1.5)
 s.text(272, 94, "Spring Boot 3.2.5 애플리케이션  ·  내장 Tomcat (포트 8080)", size=15, weight=700, anchor="start")
 
 s.layer(280, 120, 190, 150, "LoginInterceptor", "common", body="학생 요청 검사\n미로그인 → /login\n초기 비밀번호 사용 중\n→ /password/change")
-s.layer(280, 290, 190, 130, "AdminInterceptor *", "common", body="/admin/** 요청 검사\n교직원 로그인 ·\n역할(role) 확인", planned=True)
-s.layer(280, 440, 190, 110, "HttpSession", "common", body="loginStudent (학생)\nloginStaff (교직원) *")
+s.layer(280, 290, 190, 130, "AdminInterceptor", "common", body="/admin/** 요청 검사\n교직원 로그인 ·\n역할(role) 확인", planned=True)
+s.layer(280, 440, 190, 110, "HttpSession", "common", body="loginStudent (학생)\nloginStaff (교직원)")
 s.layer(280, 570, 190, 150, "설정 (config)", "common", items=["WebConfig", "PasswordConfig (BCrypt)", "DataInitializer"], item_h=28, gap=7)
 
 ctrls = ["LoginController", "DashboardController", "CourseController", "TimetableController", "MyPageController",
@@ -158,8 +157,8 @@ s.layer(745, 120, 200, 600, "Service", "svc", items=svcs, item_h=30, gap=6)
 s.layer(970, 120, 260, 600, "Repository (Spring Data JPA)", "repo", items=repos, item_h=30, gap=6,
         body="JpaRepository 상속\n메서드 이름으로 쿼리 자동 생성")
 
-s.layer(500, 760, 220, 110, "View (Thymeleaf)", "view", body="templates/*.html (학생)\ntemplates/admin/*.html *")
-s.layer(970, 760, 260, 110, "Hibernate (JPA 구현체)", "repo", body="@Entity 10개 ↔ 테이블 13개 매핑 *\nSQL 자동 생성 · 트랜잭션")
+s.layer(500, 760, 220, 110, "View (Thymeleaf)", "view", body="templates/*.html (학생)\ntemplates/admin/*.html (교직원)")
+s.layer(970, 760, 260, 110, "Hibernate (JPA 구현체)", "repo", body="@Entity 10개 ↔ 테이블 13개 매핑\nSQL 자동 생성 · 트랜잭션")
 
 s.arrow([(200, 205), (278, 205)], "HTTP 요청", (239, 188))
 s.arrow([(470, 195), (498, 195)])
@@ -179,7 +178,6 @@ s.box(790, 990, 170, 64, "uploads/ 폴더\n첨부파일 저장", "ext", size=13)
 s.box(1000, 990, 190, 64, "OpenWeatherMap API\n날씨 정보 (REST)", "ext", size=13)
 s.arrow([(790, 720), (790, 956)], "FileStorageService", (778, 940), anchor="end", size=12)
 s.arrow([(920, 720), (920, 940), (1000, 940), (1000, 956)], "WeatherService", (1010, 930), anchor="start", size=12)
-s.legend(1290, 110, [("plan", "구현 예정 (* 표시)")])
 s.save("1_시스템구성도")
 
 # ---------------------------------------------------------------- 2. E-R 다이어그램
@@ -205,7 +203,7 @@ T = {
                                              ("", "status", f"{VC}(10)"), ("", "applied_at", "TIMESTAMP")], None),
     "notices": ("공지사항", [("PK", "id", "BIGINT"), ("", "title", f"{VC}(255)"), ("", "content", f"{VC}(2000)"),
                          ("", "writer", f"{VC}(255)"), ("", "created_at", "TIMESTAMP"), ("FK", "staff_id", "BIGINT", True)], None),
-    "staffs": ("교직원 *", [("PK", "id", "BIGINT", True), ("UK", "staff_no", f"{VC}(20)", True),
+    "staffs": ("교직원", [("PK", "id", "BIGINT", True), ("UK", "staff_no", f"{VC}(20)", True),
                           ("", "password", f"{VC}(255)", True), ("", "name", f"{VC}(30)", True),
                           ("", "department", f"{VC}(50)", True), ("", "role", f"{VC}(30)", True),
                           ("", "last_login_at", "TIMESTAMP", True)], None),
@@ -232,14 +230,14 @@ e = Svg(1540, 1430)
 def table(name, x, y, child=False, planned=False):
     kor, cols, note = T[name]
     h = HH + RH * (len(cols) + (1 if note else 0))
-    head = "#2E8B57" if planned else ("#64748B" if child else "#2F4B7C")
-    e.rect(x, y, TW, h, "#FFFFFF", head, rx=6, sw=1.6, dash="7 4" if planned else None)
+    head = "#64748B" if child else "#2F4B7C"
+    e.rect(x, y, TW, h, "#FFFFFF", head, rx=6, sw=1.6)
     e.add(f'<path d="M{x},{y + HH} V{y + 6} a6,6 0 0 1 6,-6 H{x + TW - 6} a6,6 0 0 1 6,6 V{y + HH} Z" fill="{head}"/>')
     e.text(x + 12, y + HH / 2, name, size=13.5, weight=700, fill="#FFFFFF", anchor="start")
     e.text(x + TW - 12, y + HH / 2, kor, size=12.5, fill="#E2E8F0", anchor="end")
     for i, c_ in enumerate(cols):
         key, col, typ = c_[:3]
-        new = len(c_) > 3 and not planned
+        new = False
         ry = y + HH + i * RH
         if new:
             e.add(f'<rect x="{x + 1}" y="{ry}" width="{TW - 2}" height="{RH}" fill="#E3F4E8"/>')
@@ -312,17 +310,17 @@ table("notices", c1, 1110)
 table("staffs", c2, 1110, planned=True)
 table("academic_schedules", c3, 1110)
 table("job_postings", c4, 1110)
-# staffs 1 : N 결재단계(processed_by) / 공지(staff_id)  – 구현 예정 관계는 초록 선
-rel([(470, 1110), (470, 1030), (200, 1030), (200, 986)], color="#2E8B57")
-rel([(690, 1110), (690, 1030), (960, 1030), (960, 986)], color="#2E8B57")
-rel([(420, 1180), (360, 1180)], color="#2E8B57")
-e.text(335, 1014, "1 : N (결재 처리자)", size=12, fill="#1E6B41", halo=True)
-e.text(825, 1014, "1 : N (결재 처리자)", size=12, fill="#1E6B41", halo=True)
-e.text(390, 1164, "1 : N", size=12, fill="#1E6B41", halo=True)
+# staffs 1 : N 결재단계(processed_by) / 공지(staff_id)
+rel([(470, 1110), (470, 1030), (200, 1030), (200, 986)])
+rel([(690, 1110), (690, 1030), (960, 1030), (960, 986)])
+rel([(420, 1180), (360, 1180)])
+e.text(335, 1014, "1 : N (결재 처리자)", size=12, fill=MUTED, halo=True)
+e.text(825, 1014, "1 : N (결재 처리자)", size=12, fill=MUTED, halo=True)
+e.text(390, 1164, "1 : N", size=12, fill=MUTED, halo=True)
 
 # 범례
 lx, ly = c4, 330
-e.rect(lx, ly, TW, 250, "#FAFBFC", "#CBD2D9", rx=8, sw=1.2)
+e.rect(lx, ly, TW, 200, "#FAFBFC", "#CBD2D9", rx=8, sw=1.2)
 e.text(lx + 16, ly + 24, "표기법", size=13.5, weight=700, anchor="start")
 rel([(lx + 20, ly + 58), (lx + 110, ly + 58)])
 e.text(lx + 124, ly + 58, "1 : N  (왼쪽 1, 오른쪽 N)", size=12.5, anchor="start", fill=MUTED)
@@ -332,10 +330,7 @@ for i, (k, d_) in enumerate([("PK", "기본키 (Primary Key)"), ("FK", "외래�
     e.text(lx + 56, yy, d_, size=12.5, fill=MUTED, anchor="start")
 e.rect(lx + 20, ly + 160, 22, 14, "#64748B", "#64748B", rx=3, sw=1)
 e.text(lx + 52, ly + 167, "@ElementCollection 테이블", size=12.5, fill=MUTED, anchor="start")
-e.rect(lx + 20, ly + 190, 22, 14, "#E3F4E8", "#2E8B57", rx=3, sw=1, dash="4 3")
-e.text(lx + 52, ly + 197, "구현 예정 테이블·컬럼 (*)", size=12.5, fill=MUTED, anchor="start")
-e.add(f'<line x1="{lx + 20}" y1="{ly + 224}" x2="{lx + 110}" y2="{ly + 224}" stroke="#2E8B57" stroke-width="1.6" stroke-dasharray="7 4"/>')
-e.text(lx + 124, ly + 224, "구현 예정 관계", size=12.5, fill=MUTED, anchor="start")
+
 e.save("2_ERD")
 
 # ---------------------------------------------------------------- 3. 로그인 흐름 (회원가입 없음)
@@ -441,7 +436,7 @@ UC = {}
 
 
 def actor(cx, cy, name, planned=False):
-    col = "#2E8B57" if planned else INK
+    col = INK
     st = f'fill="none" stroke="{col}" stroke-width="2"'
     u.add(f'<circle cx="{cx}" cy="{cy - 46}" r="14" {st}/>')
     u.add(f'<line x1="{cx}" y1="{cy - 32}" x2="{cx}" y2="{cy + 8}" {st}/>')
@@ -452,8 +447,8 @@ def actor(cx, cy, name, planned=False):
 
 
 def uc(key, cx, cy, label, w=220, h=48, kind="ctrl", planned=False):
-    fill, stroke = C["plan"] if planned else C[kind]
-    dash = ' stroke-dasharray="6 4"' if planned else ""
+    fill, stroke = C["db"] if planned else C[kind]   # 교직원 기능은 초록색으로 구분
+    dash = ""
     u.add(f'<ellipse cx="{cx}" cy="{cy}" rx="{w / 2}" ry="{h / 2}" fill="{fill}" stroke="{stroke}" stroke-width="1.6"{dash}/>')
     u.text(cx, cy, label, size=13)
     UC[key] = (cx, cy, w, h)
@@ -507,7 +502,7 @@ uc("lock", M, UC["login"][1] + 10, "계정 잠금 (5회 실패)", w=200, kind="c
 uc("firstchg", M, UC["pwchange"][1] + 10, "최초 로그인 시\n비밀번호 변경 강제", w=200, h=56, kind="common")
 dep("lock", "login", "<<extend>>")
 dep("firstchg", "login", "<<extend>>")
-uc("check", M, UC["enroll"][1] + 30, "정원 · 중복 검증\n시간 충돌 검증 *", w=200, h=56, kind="common")
+uc("check", M, UC["enroll"][1] + 30, "정원 · 중복 검증\n시간 충돌 검증", w=200, h=56, kind="common")
 dep("enroll", "check", "<<include>>")
 uc("upload", M, (UC["leave"][1] + UC["schol"][1]) / 2, "첨부파일 업로드", w=200, kind="common")
 dep("leave", "upload", "<<include>>")
@@ -515,14 +510,14 @@ dep("schol", "upload", "<<include>>")
 uc("weather", M, UC["dash"][1] + 30, "날씨 조회", w=200, kind="common")
 dep("dash", "weather", "<<include>>")
 
-# 교직원(관리자) 기능 – 구현 예정
+# 교직원(관리자) 기능
 ADMIN = [
-    ("교직원 인증 *", [("alogin", "교직원 로그인 / 로그아웃")]),
-    ("학적 관리 (학사관리자) *", [("reg", "학생 학적 등록\n(초기 비밀번호 발급)"), ("slist", "학생 목록 조회"),
+    ("교직원 인증", [("alogin", "교직원 로그인 / 로그아웃")]),
+    ("학적 관리 (학사관리자)", [("reg", "학생 학적 등록\n(초기 비밀번호 발급)"), ("slist", "학생 목록 조회"),
                                  ("unlock", "계정 잠금 해제 ·\n비밀번호 초기화")]),
-    ("수업 관리 (학사관리자) *", [("course", "강좌 개설 · 수정"), ("cstat", "강좌별 수강신청 현황")]),
-    ("게시판 관리 (학사관리자) *", [("nwrite", "공지사항 작성"), ("swrite", "학사일정 등록")]),
-    ("결재 (결재자) *", [("inbox", "결재함 조회\n(내 역할의 대기 건)"), ("decide", "휴학 · 장학금\n승인 / 반려")]),
+    ("수업 관리 (학사관리자)", [("course", "강좌 개설 · 수정"), ("cstat", "강좌별 수강신청 현황")]),
+    ("게시판 관리 (학사관리자)", [("nwrite", "공지사항 작성"), ("swrite", "학사일정 등록")]),
+    ("결재 (결재자)", [("inbox", "결재함 조회\n(내 역할의 대기 건)"), ("decide", "휴학 · 장학금\n승인 / 반려")]),
 ]
 y = 80
 for title, items in ADMIN:
@@ -548,14 +543,14 @@ for k in student_ucs:
 def right_assoc(ax, ay, keys):
     for k in keys:
         cx, cy, w, h = UC[k]
-        u.add(f'<line x1="{ax}" y1="{ay}" x2="{cx + w / 2}" y2="{cy}" stroke="#2E8B57" stroke-width="1.3"/>')
+        u.add(f'<line x1="{ax}" y1="{ay}" x2="{cx + w / 2}" y2="{cy}" stroke="{LINE}" stroke-width="1.3"/>')
 
 
 ad_y = (UC["reg"][1] + UC["swrite"][1]) / 2
-actor(1460, ad_y, "학사관리자 *", planned=True)
+actor(1460, ad_y, "학사관리자", planned=True)
 right_assoc(1436, ad_y - 18, ["alogin", "reg", "slist", "unlock", "course", "cstat", "nwrite", "swrite"])
 ap_y = UC["decide"][1] + 40
-actor(1460, ap_y, "결재자 *", planned=True)
+actor(1460, ap_y, "결재자", planned=True)
 u.text(1460, ap_y + 84, "담당직원 · 학과장\n장학위원회 · 학생처장", size=12, fill=MUTED)
 right_assoc(1436, ap_y - 18, ["alogin", "inbox", "decide"])
 
@@ -566,13 +561,13 @@ u.text(wx, bottom + 52, "<<external system>>", size=11.5, fill=MUTED, italic=Tru
 u.text(wx, bottom + 76, "OpenWeatherMap API", size=13, weight=600)
 u.add(f'<line x1="{wx}" y1="{wy + wh / 2}" x2="{wx}" y2="{bottom + 30}" stroke="{LINE}" stroke-width="1.3"/>')
 
-u.legend(1380, 50, [("ctrl", "학생 기능 (구현 완료)"), ("common", "포함 · 확장 기능"), ("plan", "교직원 기능 (구현 예정 *)")])
+u.legend(1380, 50, [("ctrl", "학생 기능"), ("common", "포함 · 확장 기능"), ("db", "교직원 기능")])
 u.add(f'<line x1="1380" y1="142" x2="1420" y2="142" stroke="{LINE}" stroke-width="1.6" stroke-dasharray="6 4" marker-end="url(#arr)"/>')
 u.text(1428, 142, "include / extend", size=13, anchor="start", fill=MUTED)
 u.h = bottom + 130
 u.save("5_유스케이스다이어그램")
 
-# ---------------------------------------------------------------- 6. 관리자(교직원) 실행 흐름 – 구현 예정
+# ---------------------------------------------------------------- 6. 관리자(교직원) 실행 흐름
 k = Svg(1300, 1190)
 k.legend(1040, 30, [("term", "시작 / 끝"), ("proc", "처리 · 화면"), ("dec", "판단"), ("db", "DB 작업 (JPA)")])
 k.term(200, 70, 260, 56, "교직원 접속\n/admin")

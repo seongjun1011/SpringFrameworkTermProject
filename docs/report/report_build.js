@@ -1,4 +1,4 @@
-// 프로젝트 계획서(중간 점검본, 관리자 화면 구현 계획 포함) .docx 생성
+// 프로젝트 계획서 .docx 생성
 // 사용법: node build.js <다이어그램 폴더> <출력 .docx>
 const fs = require("fs");
 const path = require("path");
@@ -43,7 +43,7 @@ function figure(file, maxWpt = 482, maxHpt = 640) {
 
 const border = { style: BorderStyle.SINGLE, size: 4, color: "B8C2CC" };
 const borders = { top: border, bottom: border, left: border, right: border };
-// 행의 마지막 요소가 PLAN 객체면 그 행을 초록 배경(구현 예정)으로 표시
+// (행 끝의 PLAN 표시는 더 이상 화면에 반영하지 않음)
 const PLAN = { plan: true };
 function table(widths, header, rows, o = {}) {
   const total = widths.reduce((a, b) => a + b, 0);
@@ -67,8 +67,8 @@ function table(widths, header, rows, o = {}) {
     rows: [
       new TableRow({ tableHeader: true, children: header.map((h, i) => cell(h, i, true, false)) }),
       ...rows.map((row) => {
-        const plan = row[row.length - 1] === PLAN;
-        const cells = plan ? row.slice(0, -1) : row;
+        const plan = false;
+        const cells = row[row.length - 1] === PLAN ? row.slice(0, -1) : row;
         return new TableRow({ cantSplit: true, children: cells.map((c, i) => cell(c, i, false, plan)) });
       }),
     ],
@@ -102,7 +102,7 @@ const cover = [
       coverRow("학년", "2학년"),
       coverRow("학번", "2301110329"),
       coverRow("성명", "박성준"),
-      coverRow("작성일", "2026년 11월 24일 (중간 점검본)"),
+      coverRow("작성일", "2026년 11월 24일"),
     ],
   }),
   new Paragraph({ children: [new PageBreak()] }),
@@ -112,17 +112,12 @@ const cover = [
 const toc = [
   "1. 프로젝트 개요", "2. 주제", "3. 개발 환경 및 사용 기술", "4. 유스케이스 다이어그램",
   "5. 기능 명세 (기능별 처리 메서드 및 기술)", "6. 시스템 설계도", "7. DB 설계 (E-R Diagram)",
-  "8. 시스템 실행 흐름도", "9. 향후 진행 계획",
+  "8. 시스템 실행 흐름도", "9. 개발 일정",
 ];
 
 const body = [
   new Paragraph({ spacing: { after: 200 }, children: [r("목 차", { bold: true, size: 30, color: NAVY })] }),
   ...toc.map((t) => new Paragraph({ spacing: { after: 120 }, indent: { left: 200 }, children: [r(t, { size: 22 })] })),
-  new Paragraph({ spacing: { before: 400 }, shading: { fill: "EEF9F1", type: ShadingType.CLEAR, color: "auto" },
-    border: { left: { style: BorderStyle.SINGLE, size: 24, color: GREEN, space: 8 } },
-    children: [r("표기 안내: 본 문서는 중간 점검본이다. 그림과 표에서 ", { size: 19 }),
-      r("* 표시, 초록색 점선, 초록 배경", { size: 19, bold: true, color: "1E6B41" }),
-      r("으로 표시한 항목은 최종 제출 전까지 구현할 예정인 교직원(관리자) 기능이며, 그 외 항목은 구현을 완료하였다.", { size: 19 })] }),
   new Paragraph({ children: [new PageBreak()] }),
 
   // 1. 개요
@@ -137,19 +132,18 @@ const body = [
   bullet("학생 화면과 교직원(관리자) 화면을 분리하고, 교직원의 역할(학사관리자·결재자)에 따라 사용할 수 있는 기능을 제한한다."),
   bullet("수강신청·결재처럼 여러 테이블을 함께 바꾸는 작업을 트랜잭션으로 묶고, 정원 초과·중복 신청을 DB 제약과 행 잠금으로 막는다."),
   bullet("계정마다 자신의 수강신청·시간표·신청 내역만 조회되도록 데이터를 학생 기준으로 분리한다."),
-  h2("1.3 범위 및 진행 현황"),
-  table([2200, 5638, 1800], ["구분", "범위", "상태"], [
-    ["학생 – 계정", "로그인·로그아웃, 최초 로그인 비밀번호 변경 강제, 5회 실패 잠금, 비밀번호 변경·초기화", "구현 완료"],
-    ["학생 – 수업", "수강신청·취소, 수강신청내역, 개인시간표", "구현 완료"],
-    ["학생 – 학적·장학", "개인신상정보 수정, 휴학·복학 신청, 장학금 신청(첨부파일, 결재 진행 상태 조회)", "구현 완료"],
-    ["학생 – 포털", "통합포털 대시보드(날씨 API), 공지사항·채용정보·학사일정 조회", "구현 완료"],
-    ["수강신청 보완", "같은 요일·교시가 겹치는 강좌의 중복 신청 방지(시간 충돌 검사)", "구현 예정", PLAN],
-    ["교직원 – 인증", "교직원 계정(staffs), 교직원 로그인, 관리자 접근 제어(AdminInterceptor)", "구현 예정", PLAN],
-    ["학사관리자", "학생 학적 등록(초기 비밀번호 발급), 학생 목록, 잠금 해제·비밀번호 초기화, 강좌 개설·수정과 수강 현황, 공지사항·학사일정 등록", "구현 예정", PLAN],
-    ["결재자", "결재함 조회, 휴학·장학금 신청 단계별 승인·반려", "구현 예정", PLAN],
-  ], { center: [2] }),
+  h2("1.3 범위"),
+  table([2400, 7238], ["구분", "범위"], [
+    ["학생 – 계정", "로그인·로그아웃, 최초 로그인 비밀번호 변경 강제, 5회 실패 잠금, 비밀번호 변경·초기화"],
+    ["학생 – 수업", "수강신청·취소(정원·중복·시간 충돌 검사), 수강신청내역, 개인시간표"],
+    ["학생 – 학적·장학", "개인신상정보 수정, 휴학·복학 신청, 장학금 신청(첨부파일, 결재 진행 상태 조회)"],
+    ["학생 – 포털", "통합포털 대시보드(날씨 API), 공지사항·채용정보·학사일정 조회"],
+    ["교직원 – 인증", "교직원 계정(staffs), 교직원 로그인, 관리자 접근 제어(AdminInterceptor)"],
+    ["학사관리자", "학생 학적 등록(초기 비밀번호 발급), 학생 목록, 잠금 해제·비밀번호 초기화, 강좌 개설·수정과 수강 현황, 공지사항·학사일정 등록"],
+    ["결재자", "결재함 조회, 휴학·장학금 신청 단계별 승인·반려"],
+  ]),
   gap(),
-  p("사이드바의 증명서발급·등록금·성적조회 메뉴는 화면 구조만 반영한 비활성 메뉴로 범위에서 제외한다. 현재 서버 시작 시 DataInitializer가 넣는 학생 명단과 데모 데이터는, 관리자 화면 구현 후 데모용 초기 데이터(교직원 계정 포함)로만 사용한다."),
+  p("사이드바의 증명서발급·등록금·성적조회 메뉴는 화면 구조만 반영한 비활성 메뉴로 범위에서 제외한다. 서버 시작 시 DataInitializer는 시연을 위한 데모 데이터(교직원 계정, 강좌, 공지 등)를 비어 있는 테이블에만 넣는다."),
 
   // 2. 주제
   h1("2. 주제"),
@@ -164,10 +158,10 @@ const body = [
   table([2300, 7338], ["구분", "내용"], [
     ["언어 / 빌드", "Java 17, Maven"],
     ["프레임워크", "Spring Boot 3.2.5 (Spring MVC, 내장 Tomcat)"],
-    ["데이터 접근", "Spring Data JPA (구현체 Hibernate), JpaRepository, 메서드 이름 기반 쿼리, @Query(JPQL), Pageable 페이징(예정)"],
+    ["데이터 접근", "Spring Data JPA (구현체 Hibernate), JpaRepository, 메서드 이름 기반 쿼리, @Query(JPQL), Pageable 페이징"],
     ["데이터베이스", "H2 Database (파일 모드, MySQL 호환 모드) – data/portaldb.mv.db, ddl-auto=update로 테이블 자동 생성"],
-    ["화면", "Thymeleaf 템플릿 엔진 (layout fragment로 헤더·사이드바 공통화), HTML/CSS, 관리자 화면 templates/admin/*.html(예정)"],
-    ["인증 / 보안", "HttpSession 기반 로그인(학생 loginStudent / 교직원 loginStaff 분리), HandlerInterceptor로 접근 제어(LoginInterceptor, AdminInterceptor 예정), 역할 기반 메뉴 제한, BCrypt 비밀번호 해시 (spring-security-crypto)"],
+    ["화면", "Thymeleaf 템플릿 엔진 (layout fragment로 헤더·사이드바 공통화), HTML/CSS, 관리자 화면 templates/admin/*.html"],
+    ["인증 / 보안", "HttpSession 기반 로그인(학생 loginStudent / 교직원 loginStaff 분리), HandlerInterceptor로 접근 제어(LoginInterceptor, AdminInterceptor), 역할 기반 메뉴 제한, BCrypt 비밀번호 해시 (spring-security-crypto)"],
     ["외부 연동", "OpenWeatherMap REST API (RestTemplate) – 키 미설정 시 더미 데이터"],
     ["파일 업로드", "MultipartFile – uploads/ 폴더에 저장, DB에는 원본·저장 파일명 기록"],
     ["도구", "IntelliJ IDEA, Git / GitHub, IntelliJ Database 창·H2 Console(DB 조회)"],
@@ -177,20 +171,20 @@ const body = [
   // 4. 유스케이스
   h1("4. 유스케이스 다이어그램"),
   figure("5_유스케이스다이어그램.png", 482, 600),
-  caption("[그림 1] 유스케이스 다이어그램 (초록 점선: 구현 예정)"),
+  caption("[그림 1] 유스케이스 다이어그램"),
   table([2000, 7638], ["액터", "설명"], [
     ["학생", "학사관리자가 등록한 학번으로 로그인하여 계정 관리, 수강신청·시간표, 학적·장학 신청, 포털·게시판 조회 기능을 사용한다."],
-    ["학사관리자 *", "학생 학적 정보(학번·이름·학과·학년·생년월일)를 등록하여 초기 비밀번호(생년월일 6자리)를 발급하고, 계정 잠금 해제·비밀번호 초기화, 강좌 개설·수정, 공지사항·학사일정 등록을 한다.", PLAN],
-    ["결재자 *", "담당직원·학과장·장학위원회·학생처장 역할의 교직원. 결재함에서 자신의 차례가 된 휴학·장학금 신청을 승인하거나 반려한다.", PLAN],
+    ["학사관리자", "학생 학적 정보(학번·이름·학과·학년·생년월일)를 등록하여 초기 비밀번호(생년월일 6자리)를 발급하고, 계정 잠금 해제·비밀번호 초기화, 강좌 개설·수정, 공지사항·학사일정 등록을 한다."],
+    ["결재자", "담당직원·학과장·장학위원회·학생처장 역할의 교직원. 결재함에서 자신의 차례가 된 휴학·장학금 신청을 승인하거나 반려한다."],
     ["OpenWeatherMap API", "대시보드의 날씨 위젯에 현재 날씨를 제공하는 외부 시스템이다."],
   ]),
   gap(),
-  p([r("포함·확장 관계: ", { bold: true }), r("수강신청은 항상 정원·중복 검증(시간 충돌 검증 추가 예정)을 포함(<<include>>)하고, 휴학·장학금 신청은 첨부파일 업로드를 포함한다. 로그인은 5회 실패 시 계정 잠금, 초기 비밀번호 사용 시 비밀번호 변경 강제로 확장(<<extend>>)된다.")]),
+  p([r("포함·확장 관계: ", { bold: true }), r("수강신청은 항상 정원·중복·시간 충돌 검증을 포함(<<include>>)하고, 휴학·장학금 신청은 첨부파일 업로드를 포함한다. 로그인은 5회 실패 시 계정 잠금, 초기 비밀번호 사용 시 비밀번호 변경 강제로 확장(<<extend>>)된다.")]),
 
   // 5. 기능 명세
   h1("5. 기능 명세 (기능별 처리 메서드 및 기술)"),
   p("각 기능은 Controller가 요청을 받고, Service가 업무 규칙과 트랜잭션을 처리하며, Repository(JpaRepository)가 DB에 접근하는 구조로 구현한다."),
-  h2("5.1 학생 기능 (구현 완료)"),
+  h2("5.1 학생 기능"),
   table([1450, 1750, 3238, 3200], ["기능", "요청 (URL)", "처리 메서드 (Controller → Service)", "사용 기술 · 구현 포인트"], [
     ["로그인 검사", "모든 학생 요청", "LoginInterceptor.preHandle()", "HandlerInterceptor, WebConfig에서 /login·/password/reset·정적 리소스 제외. 초기 비밀번호 사용자는 변경 화면만 허용"],
     ["로그인", "POST /login", "LoginController.login() → StudentService.login()", "BCrypt matches, 실패 횟수 증가·5회 잠금, 로그인 성공 시 세션 재발급, 마지막 로그인 시각·IP 저장(변경 감지)"],
@@ -199,7 +193,7 @@ const body = [
     ["비밀번호 초기화", "GET·POST /password/reset", "LoginController.reset() → StudentService.resetPassword()", "학번·이름·생년월일 대조 후 생년월일로 초기화, 잠금 해제, 다음 로그인 시 변경 강제"],
     ["통합포털 대시보드", "GET /", "DashboardController.dashboard()", "EnrollmentService·ScheduleService·NoticeService·JobService 조회, WeatherService(RestTemplate) 외부 API"],
     ["강좌 목록", "GET /courses", "CourseController.list() → CourseService.findAll()", "findAllByOrderByIdAsc(), 학생별 신청 여부 표시"],
-    ["수강신청", "POST /courses/{id}/enroll", "CourseController.enroll() → EnrollmentService.enroll()", "@Transactional, @Lock(PESSIMISTIC_WRITE) 행 잠금, 중복 신청 검사 + UNIQUE(student_id, course_id), 정원 검사 후 enrolled_count +1"],
+    ["수강신청", "POST /courses/{id}/enroll", "CourseController.enroll() → EnrollmentService.enroll()", "@Transactional, @Lock(PESSIMISTIC_WRITE) 행 잠금, 중복 신청 검사 + UNIQUE(student_id, course_id), 같은 요일·교시가 겹치는 강좌 거부(시간 충돌), 정원 검사 후 enrolled_count +1"],
     ["수강취소", "POST /courses/{id}/cancel", "CourseController.cancel() → EnrollmentService.cancel()", "enrollments DELETE와 enrolled_count −1을 한 트랜잭션으로 처리"],
     ["수강신청내역 조회", "GET /enrollments", "CourseController.myEnrollments() → EnrollmentService.findEnrolledCourses()", "findByStudentIdOrderByAppliedAtAsc() – 로그인 학생의 id로만 조회"],
     ["개인시간표 조회", "GET /timetable", "TimetableController.timetable()", "신청 과목을 요일×교시 격자로 변환, 과목별 색상·주간 수업일수 계산"],
@@ -209,57 +203,56 @@ const body = [
     ["학사일정 조회", "GET /schedule", "ScheduleController → ScheduleService.findByMonth()", "기간이 해당 월과 겹치는 일정 조회 (StartDateLessThanEqual…EndDateGreaterThanEqual)"],
     ["공지사항 조회", "GET /notices, /notices/{id}", "NoticeController → NoticeService.findAll() / findById()", "findAllByOrderByCreatedAtDesc() 최신순"],
     ["채용정보 조회", "GET /jobs, /jobs/{id}", "JobController → JobService.findAll() / findById()", "findAllByOrderByRequestedDateDesc() 최신순, 상세 화면"],
-    ["초기 데이터 등록", "서버 시작 시", "DataInitializer.run()", "CommandLineRunner, 비어 있는 테이블에만 데모 데이터 입력 (관리자 화면 구현 후 데모용으로만 사용)"],
+    ["초기 데이터 등록", "서버 시작 시", "DataInitializer.run()", "CommandLineRunner, 비어 있는 테이블에만 데모 데이터(교직원 계정·강좌·공지 등) 입력"],
   ]),
   gap(),
-  h2("5.2 교직원(관리자) 기능 (구현 예정)"),
+  h2("5.2 교직원(관리자) 기능"),
   table([1450, 1750, 3238, 3200], ["기능", "요청 (URL)", "처리 메서드 (Controller → Service)", "사용 기술 · 구현 포인트"], [
-    ["관리자 접근 제어", "/admin/** 전체", "AdminInterceptor.preHandle()", "미로그인 → /admin/login. 학사관리자 전용 메뉴(/admin/students, courses, notices, schedules)와 결재자 전용 메뉴(/admin/approvals)를 역할로 구분", PLAN],
-    ["교직원 로그인 · 로그아웃", "GET·POST /admin/login, GET /admin/logout", "AdminLoginController.login() → StaffService.login()", "사번 + BCrypt matches, 세션에 loginStaff 저장(학생 세션과 분리), last_login_at 갱신", PLAN],
-    ["관리자 홈", "GET /admin", "AdminLoginController.home()", "역할별 메뉴, 대기 중인 결재 수 · 잠긴 학생 계정 수 표시", PLAN],
-    ["학생 학적 등록", "GET·POST /admin/students/new", "AdminStudentController.create() → StudentService.register()", "Student.register() 재사용, 생년월일 6자리를 BCrypt로 초기 비밀번호 발급, existsByLoginId()로 학번 중복 검사", PLAN],
-    ["학생 목록 조회", "GET /admin/students", "AdminStudentController.list() → StudentService.search()", "학번·이름 검색, Pageable 페이징, 잠금 여부 표시", PLAN],
-    ["잠금 해제 · 비밀번호 초기화", "POST /admin/students/{id}/unlock, /reset-password", "AdminStudentController → StudentService.unlock() / resetByAdmin()", "학생이 직접 초기화할 수 없을 때 창구 역할, 변경 감지로 UPDATE", PLAN],
-    ["강좌 개설 · 수정", "GET·POST /admin/courses/new, /admin/courses/{id}/edit", "AdminCourseController → CourseService.create() / update()", "요일·교시·정원 입력 검증, 정원을 현재 신청 인원보다 작게 줄이는 수정은 거부", PLAN],
-    ["강좌별 수강신청 현황", "GET /admin/courses/{id}/enrollments", "AdminCourseController.enrollments() → EnrollmentService.findByCourse()", "enrollments – students 조인 조회 (findByCourseId…)", PLAN],
-    ["공지사항 작성", "GET·POST /admin/notices/new", "AdminBoardController → NoticeService.write()", "작성 교직원을 notices.staff_id FK로 연결", PLAN],
-    ["학사일정 등록", "GET·POST /admin/schedules/new", "AdminBoardController → ScheduleService.create()", "시작일 ≤ 종료일 검증", PLAN],
-    ["결재함 조회", "GET /admin/approvals", "ApprovalController.inbox() → ApprovalService.findPendingFor(role)", "내 역할의 단계가 '대기'이고 앞 단계가 모두 승인된 휴학·장학금 신청만 조회", PLAN],
-    ["승인 · 반려", "POST /admin/approvals/{type}/{id}/approve, /reject", "ApprovalController → ApprovalService.approve() / reject()", "@Transactional, 결재단계에 처리자(staff)·일시·의견 저장, 신청서 recalcStatus()로 상태 재계산", PLAN],
-    ["수강신청 시간 충돌 검사", "POST /courses/{id}/enroll (보완)", "EnrollmentService.enroll()", "이미 신청한 강좌와 요일이 같고 교시 범위가 겹치면 신청 거부", PLAN],
-  ], { headColor: GREEN }),
+    ["관리자 접근 제어", "/admin/** 전체", "AdminInterceptor.preHandle()", "미로그인 → /admin/login. 학사관리자 전용 메뉴(/admin/students, courses, notices, schedules)와 결재자 전용 메뉴(/admin/approvals)를 역할로 구분"],
+    ["교직원 로그인 · 로그아웃", "GET·POST /admin/login, GET /admin/logout", "AdminLoginController.login() → StaffService.login()", "사번 + BCrypt matches, 세션에 loginStaff 저장(학생 세션과 분리), last_login_at 갱신"],
+    ["관리자 홈", "GET /admin", "AdminLoginController.home()", "역할별 메뉴, 대기 중인 결재 수 · 잠긴 학생 계정 수 표시"],
+    ["학생 학적 등록", "GET·POST /admin/students/new", "AdminStudentController.create() → StudentService.register()", "Student.register() 재사용, 생년월일 6자리를 BCrypt로 초기 비밀번호 발급, existsByLoginId()로 학번 중복 검사"],
+    ["학생 목록 조회", "GET /admin/students", "AdminStudentController.list() → StudentService.search()", "학번·이름 검색, Pageable 페이징, 잠금 여부 표시"],
+    ["잠금 해제 · 비밀번호 초기화", "POST /admin/students/{id}/unlock, /reset-password", "AdminStudentController → StudentService.unlock() / resetByAdmin()", "학생이 직접 초기화할 수 없을 때 창구 역할, 변경 감지로 UPDATE"],
+    ["강좌 개설 · 수정", "GET·POST /admin/courses/new, /admin/courses/{id}/edit", "AdminCourseController → CourseService.create() / update()", "요일·교시·정원 입력 검증, 정원을 현재 신청 인원보다 작게 줄이는 수정은 거부"],
+    ["강좌별 수강신청 현황", "GET /admin/courses/{id}/enrollments", "AdminCourseController.enrollments() → EnrollmentService.findByCourse()", "enrollments – students 조인 조회 (findByCourseId…)"],
+    ["공지사항 작성", "GET·POST /admin/notices/new", "AdminBoardController → NoticeService.write()", "작성 교직원을 notices.staff_id FK로 연결"],
+    ["학사일정 등록", "GET·POST /admin/schedules/new", "AdminBoardController → ScheduleService.create()", "시작일 ≤ 종료일 검증"],
+    ["결재함 조회", "GET /admin/approvals", "ApprovalController.inbox() → ApprovalService.findPendingFor(role)", "내 역할의 단계가 '대기'이고 앞 단계가 모두 승인된 휴학·장학금 신청만 조회"],
+    ["승인 · 반려", "POST /admin/approvals/{type}/{id}/approve, /reject", "ApprovalController → ApprovalService.approve() / reject()", "@Transactional, 결재단계에 처리자(staff)·일시·의견 저장, 신청서 recalcStatus()로 상태 재계산"],
+    ]),
   gap(),
 
   // 6. 시스템 설계도
   h1("6. 시스템 설계도"),
   figure("1_시스템구성도.png"),
-  caption("[그림 2] 시스템 구성도 (* 초록 점선: 구현 예정)"),
+  caption("[그림 2] 시스템 구성도"),
   bullet([r("요청 흐름: ", { bold: true }), r("브라우저 요청 → 인터셉터(학생: LoginInterceptor / 관리자: AdminInterceptor) → Controller → Service → Repository → Hibernate가 SQL 생성 → H2 DB")]),
   bullet([r("응답 흐름: ", { bold: true }), r("Controller가 Model에 데이터를 담아 Thymeleaf 템플릿 이름을 반환 → 서버에서 HTML을 생성하여 응답")]),
-  bullet([r("Controller: ", { bold: true }), r("학생용 10개(구현 완료) + 관리자용 5개(AdminLogin, AdminStudent, AdminCourse, AdminBoard, Approval – 예정)")]),
-  bullet([r("Service: ", { bold: true }), r("업무 규칙(정원·중복·비밀번호 정책·결재 순서)과 @Transactional 트랜잭션 경계. StaffService, ApprovalService 추가 예정")]),
-  bullet([r("Repository: ", { bold: true }), r("JpaRepository를 상속하여 기본 CRUD와 메서드 이름 기반 쿼리를 자동 구현. StaffRepository 추가 예정")]),
+  bullet([r("Controller: ", { bold: true }), r("학생용 10개 + 교직원(관리자)용 5개(AdminLogin, AdminStudent, AdminCourse, AdminBoard, Approval)")]),
+  bullet([r("Service: ", { bold: true }), r("업무 규칙(정원·중복·비밀번호 정책·결재 순서)과 @Transactional 트랜잭션 경계. 교직원 기능은 StaffService, ApprovalService가 담당")]),
+  bullet([r("Repository: ", { bold: true }), r("JpaRepository를 상속하여 기본 CRUD와 메서드 이름 기반 쿼리를 자동 구현 (Repository 9개)")]),
   bullet([r("설정: ", { bold: true }), r("WebConfig(인터셉터 등록, 학생/관리자 경로 분리), PasswordConfig(BCryptPasswordEncoder 빈), DataInitializer(데모 데이터)")]),
 
   // 7. DB 설계
   h1("7. DB 설계 (E-R Diagram)"),
   figure("2_ERD.png"),
-  caption("[그림 3] E-R 다이어그램 (구현 예정 포함: 엔티티 10개 ↔ 테이블 13개)"),
+  caption("[그림 3] E-R 다이어그램 (엔티티 10개 ↔ 테이블 13개)"),
   h2("7.1 테이블 명세 (기본키 · 외래키 · 제약조건)"),
   table([2500, 1500, 2700, 2938], ["테이블 (엔티티)", "기본키 (PK)", "외래키 (FK) → 참조", "주요 컬럼 · 제약조건"], [
     ["students (Student)", "id (자동 증가)", "-", "login_id UNIQUE(학번), password(BCrypt), birth_date, password_change_required, login_fail_count, locked"],
     ["courses (Course)", "id", "-", "name, professor, day_of_week, start_period, end_period, capacity, enrolled_count"],
     ["enrollments (Enrollment)", "id", ["student_id → students.id", "course_id → courses.id"], "UNIQUE(student_id, course_id) – 같은 강좌 중복 신청 방지, applied_at"],
     ["leave_applications (LeaveApplication)", "id", "student_id → students.id", "apply_type(휴학/복학), reason, status, applied_at"],
-    ["leave_applications_steps", "(application_id, step_order)", ["application_id → leave_applications.id", "processed_by → staffs.id *"], "approver_role, approver_name, step_status, processed_at, step_comment"],
+    ["leave_applications_steps", "(application_id, step_order)", ["application_id → leave_applications.id", "processed_by → staffs.id"], "approver_role, approver_name, step_status, processed_at, step_comment"],
     ["leave_applications_files", "(application_id, file_order)", "application_id → leave_applications.id", "original_name, stored_name"],
     ["scholarship_applications (ScholarshipApplication)", "id", "student_id → students.id", "apply_type(장학금 종류), reason, status, applied_at"],
-    ["scholarship_applications_steps", "(application_id, step_order)", ["application_id → scholarship_applications.id", "processed_by → staffs.id *"], "휴학 결재단계와 동일 구조"],
+    ["scholarship_applications_steps", "(application_id, step_order)", ["application_id → scholarship_applications.id", "processed_by → staffs.id"], "휴학 결재단계와 동일 구조"],
     ["scholarship_applications_files", "(application_id, file_order)", "application_id → scholarship_applications.id", "original_name, stored_name"],
-    ["notices (Notice)", "id", "staff_id → staffs.id *", "title, content, writer, created_at"],
+    ["notices (Notice)", "id", "staff_id → staffs.id", "title, content, writer, created_at"],
     ["academic_schedules (AcademicSchedule)", "id", "-", "title, start_date, end_date"],
     ["job_postings (JobPosting)", "id", "-", "company, job_role, region, deadline, salary, description, requirements"],
-    ["staffs (Staff) *", "id (자동 증가)", "-", "staff_no UNIQUE(사번), password(BCrypt), name, department, role(학사관리자·담당직원·학과장·장학위원회·학생처장), last_login_at", PLAN],
+    ["staffs (Staff)", "id (자동 증가)", "-", "staff_no UNIQUE(사번), password(BCrypt), name, department, role(학사관리자·담당직원·학과장·장학위원회·학생처장), last_login_at"],
   ]),
   gap(),
   h2("7.2 테이블 간 참조 관계"),
@@ -270,8 +263,8 @@ const body = [
     ["students → leave_applications", "1 : N", "학생 한 명이 여러 번 휴학·복학을 신청할 수 있다."],
     ["students → scholarship_applications", "1 : N", "학생 한 명이 여러 장학금을 신청할 수 있다."],
     ["신청 → _steps / _files", "1 : N", "신청서 1건에 결재단계 3건과 첨부파일 여러 건이 딸린다. 신청서와 생명주기가 같아 별도 엔티티 대신 값 타입 컬렉션으로 저장한다."],
-    ["staffs → _steps (processed_by) *", "1 : N", "결재단계를 처리한 교직원을 기록한다. 대기 중인 단계는 NULL이다.", PLAN],
-    ["staffs → notices (staff_id) *", "1 : N", "공지사항을 작성한 교직원을 기록한다. 교직원 한 명이 여러 공지를 작성할 수 있다.", PLAN],
+    ["staffs → _steps (processed_by)", "1 : N", "결재단계를 처리한 교직원을 기록한다. 대기 중인 단계는 NULL이다."],
+    ["staffs → notices (staff_id)", "1 : N", "공지사항을 작성한 교직원을 기록한다. 교직원 한 명이 여러 공지를 작성할 수 있다."],
     ["academic_schedules / job_postings", "-", "다른 테이블과 연관관계가 없는 독립 테이블이다."],
   ], { center: [1] }),
   gap(),
@@ -284,8 +277,8 @@ const body = [
     ["@ElementCollection + @CollectionTable + @OrderColumn", "결재단계(@Embeddable ApprovalStep)·첨부파일(UploadedFile)을 신청별 하위 테이블에 순서대로 저장, (application_id, 순서)가 복합 기본키"],
     ["@Lock(PESSIMISTIC_WRITE) + @Query", "CourseRepository.findByIdForUpdate() – 수강신청 시 SELECT … FOR UPDATE로 정원 동시성 제어"],
     ["@Transactional", "Service 계층 – 기본 readOnly, 변경 메서드만 쓰기 트랜잭션. 엔티티 값 변경 시 변경 감지로 UPDATE 자동 실행"],
-    ["@Enumerated(EnumType.STRING) *", "Staff.role – 교직원 역할을 문자열(ACADEMIC_ADMIN, STAFF, DEPT_HEAD, SCHOLARSHIP_COMMITTEE, DEAN)로 저장", PLAN],
-    ["@Embeddable 안의 @ManyToOne *", "ApprovalStep.processedBy – 값 타입인 결재단계에서 처리 교직원(staffs)을 FK로 참조", PLAN],
+    ["@Enumerated(EnumType.STRING)", "Staff.role – 교직원 역할을 문자열(ACADEMIC_ADMIN, STAFF, DEPT_HEAD, SCHOLARSHIP_COMMITTEE, DEAN)로 저장"],
+    ["@Embeddable 안의 @ManyToOne", "ApprovalStep.processedBy – 값 타입인 결재단계에서 처리 교직원(staffs)을 FK로 참조"],
   ]),
 
   // 8. 실행 흐름도
@@ -298,20 +291,22 @@ const body = [
   figure("4_실행흐름도_주요기능.png"),
   caption("[그림 5] 학생 주요 기능 실행 흐름도"),
   p("대시보드에서 사이드바 메뉴를 선택하면 각 기능이 실행된다. 수강신청은 강좌 행을 잠근 상태에서 중복·정원을 검사한 뒤 신청 내역 INSERT와 신청 인원 증가를 한 트랜잭션으로 처리하고, 휴학·장학금 신청은 첨부파일 저장 후 신청서와 결재단계 3건을 함께 저장한다."),
-  h2("8.3 교직원(관리자) 흐름 – 구현 예정"),
+  h2("8.3 교직원(관리자) 흐름"),
   figure("6_실행흐름도_관리자.png", 482, 560),
   caption("[그림 6] 교직원(관리자) 실행 흐름도"),
   p("교직원은 /admin/login에서 사번으로 로그인하며, 로그인한 교직원의 역할에 따라 메뉴가 나뉜다. 학사관리자는 학적·수업·게시판 관리 기능을, 결재자는 결재함을 사용한다. 결재자는 앞 단계가 모두 승인되어 자신의 차례가 된 신청만 처리할 수 있고, 승인·반려 시 결재단계에 처리자·일시·의견을 저장한 뒤 신청서 전체 상태를 다시 계산한다."),
 
   // 9. 향후 계획
   new Paragraph({ children: [new PageBreak()] }),
-  h1("9. 향후 진행 계획"),
-  table([2000, 7638], ["시점", "내용"], [
-    ["~ 11월 30일", "Staff 엔티티·StaffRepository, 교직원 로그인과 AdminInterceptor(역할 확인), 데모 교직원 계정, 수강신청 시간 충돌 검사"],
-    ["~ 12월 4일", "학생 학적 등록·목록·잠금 해제, 결재함과 승인·반려(ApprovalService)"],
-    ["~ 12월 7일", "강좌 개설·수정과 수강 현황, 공지사항·학사일정 등록, 화면 다듬기"],
-    ["~ 12월 9일", "대표 실행 화면 캡처, 다이어그램 갱신, 최종 보고서 작성 (표지·주제·설계도·ERD·흐름도·실행 화면)"],
-    ["12월 10일(목) 자정 전", "최종 보고서 PDF 제출, 프로젝트 파일 GitHub(SpringFrameworkTermProject) 최종 커밋·푸시"],
+  h1("9. 개발 일정"),
+  table([2000, 7638], ["기간", "내용"], [
+    ["~ 11월 19일", "1학년 학생정보시스템을 Spring Boot 프로젝트로 전환, JPA 엔티티·Repository 설계 및 적용"],
+    ["~ 11월 23일", "학생 계정 체계 (학사관리자 사전 등록, 최초 로그인 비밀번호 변경, 로그인 실패 잠금, 비밀번호 초기화)"],
+    ["~ 11월 30일", "교직원 계정·로그인과 관리자 접근 제어(AdminInterceptor), 수강신청 시간 충돌 검사"],
+    ["~ 12월 4일", "학적 관리(학생 등록·목록·잠금 해제), 결재 처리(결재함·승인·반려)"],
+    ["~ 12월 7일", "수업 관리(강좌 개설·수강 현황), 게시판 관리(공지사항·학사일정 등록)"],
+    ["~ 12월 9일", "통합 테스트, 대표 실행 화면 캡처, 최종 보고서 작성"],
+    ["12월 10일(목)", "최종 보고서 PDF 제출, GitHub(SpringFrameworkTermProject) 최종 커밋·푸시"],
   ]),
 ];
 
