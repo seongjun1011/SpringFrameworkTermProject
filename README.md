@@ -9,7 +9,9 @@
 - Spring MVC (Controller - Service - Model 계층 구조)
 - Thymeleaf (서버사이드 템플릿 렌더링)
 - HttpSession 기반 직접 구현한 로그인/인증 (Spring Security 미사용)
-- HandlerInterceptor를 이용한 로그인 여부 검사 (`/login`, `/error`, 정적 리소스 제외)
+- HandlerInterceptor를 이용한 접근 제어
+  - 학생 화면: `LoginInterceptor` (로그인·초기 비밀번호 변경 여부 검사)
+  - 교직원 화면(`/admin/**`): `AdminInterceptor` (교직원 로그인·역할 검사)
 - Spring Data JPA + H2(파일 DB)로 회원·강좌·수강신청·휴학/장학금신청·공지·채용·학사일정 데이터를 DB에 저장
 - 학사팀 사전 등록 계정 + 로그인 (BCrypt 비밀번호 해시, spring-security-crypto) — 회원가입 없음
 - OpenWeatherMap REST API 연동 (RestTemplate), 키 미설정 시 더미 데이터로 대체
@@ -28,6 +30,16 @@
    | `2401110302` | 이서연 | `050722` (생년월일) | 〃 |
    | `2401110303` | 최도윤 | `051109` (생년월일) | 〃 |
 
+5. 교직원(관리자) 화면은 `http://localhost:8080/admin/login` (학생 로그인 화면의 "교직원 로그인" 링크)
+
+   | 사번 | 이름 | 역할 | 비밀번호 |
+   |---|---|---|---|
+   | `A0001` | 정다은 | 학사관리자 | `staff1234` |
+   | `S0001` | 이수진 | 담당직원 (결재자) | `staff1234` |
+   | `S0002` | 최병철 | 학과장 (결재자) | `staff1234` |
+   | `S0003` | 박현수 | 장학위원회 (결재자) | `staff1234` |
+   | `S0004` | 김태호 | 학생처장 (결재자) | `staff1234` |
+
 날씨 위젯에 실시간 데이터를 표시하려면 `src/main/resources/application.properties`의
 `weather.api.key`에 [OpenWeatherMap](https://openweathermap.org/api)에서 발급받은 키를 입력하세요.
 입력하지 않으면 더미 날씨 데이터가 표시됩니다.
@@ -41,8 +53,11 @@
   - 비밀번호 5회 오입력 시 계정 잠금
   - 비밀번호 초기화: 학번·이름·생년월일로 본인 확인 → 생년월일로 초기화 + 잠금 해제
   - 비밀번호변경 메뉴 (로그인 후 자발적 변경)
+- 교직원(관리자) 로그인 / 로그아웃 / 관리자 홈 (`staffs` 테이블, 학생 세션과 분리)
+  - 역할: 학사관리자(학적·수업·게시판 관리), 결재자(담당직원·학과장·장학위원회·학생처장 – 결재함)
+  - 다른 역할의 메뉴에 접근하면 관리자 홈으로 돌려보내고 안내 메시지 표시
 - 통합포털 홈 (날씨, 주간 시간표, 학사일정, 채용정보, 공지사항 위젯)
-- 수강신청 / 수강신청내역조회 (정원 초과 검증, 신청 시 confirm 확인창)
+- 수강신청 / 수강신청내역조회 (정원 초과·중복 신청·수업 시간 충돌 검증, 신청 시 confirm 확인창)
 - 개인시간표조회 (교시×요일 격자, 과목별 색상 구분, 신청과목수·주간수업일수 요약)
 - 개인신상정보수정 (연락처·주소·계좌번호 수정 / 학과·캠퍼스는 조회만 가능)
 - 학사일정조회 (월별 조회, 이전/다음달 이동)
@@ -59,11 +74,12 @@
 
 모든 데이터는 Spring Data JPA를 통해 H2 파일 DB(`./data/portaldb.mv.db`)에 저장되며, 서버를 재시작해도 유지됩니다.
 테이블은 엔티티 클래스를 기준으로 자동 생성되고(`ddl-auto=update`), 테이블이 비어 있을 때만
-`DataInitializer`가 데모 데이터(데모 계정, 강좌, 공지, 채용정보, 학사일정, 결재 진행 중인 신청 내역)를 넣습니다.
+`DataInitializer`가 데모 데이터(학생·교직원 계정, 강좌, 공지, 채용정보, 학사일정, 결재 진행 중인 신청 내역)를 넣습니다.
 
 | 테이블 | 엔티티 | 관계 |
 |---|---|---|
 | students | Student | 학번·생년월일·초기비밀번호 변경 여부·로그인 실패 횟수·잠금 여부 |
+| staffs | Staff | 사번(유일)·이름·소속·역할(`@Enumerated(STRING)`) |
 | courses | Course | |
 | enrollments | Enrollment | students N:1, courses N:1 (학생-강좌 N:M 연결) |
 | leave_applications (+ _steps, _files) | LeaveApplication | students N:1 |

@@ -46,12 +46,30 @@ public class EnrollmentService {
         if (enrollmentRepository.existsByStudentIdAndCourseId(studentId, courseId)) {
             return "이미 신청한 강좌입니다.";
         }
+        Course conflict = findTimeConflict(studentId, course);
+        if (conflict != null) {
+            return "이미 신청한 '" + conflict.getName() + "'(" + conflict.getDayOfWeek() + " "
+                    + conflict.getPeriod() + ")과 수업 시간이 겹칩니다.";
+        }
         if (course.isFull()) {
             return "정원이 초과된 강좌입니다.";
         }
         enrollmentRepository.save(new Enrollment(
                 studentRepository.getReferenceById(studentId), course, LocalDateTime.now()));
         course.increaseEnrolled();   // 변경 감지(dirty checking)로 UPDATE 실행
+        return null;
+    }
+
+    /** 같은 요일에 교시 범위가 겹치는, 이미 신청한 강좌를 찾는다. 없으면 null. */
+    private Course findTimeConflict(Long studentId, Course target) {
+        for (Course c : findEnrolledCourses(studentId)) {
+            boolean sameDay = c.getDayOfWeek().equals(target.getDayOfWeek());
+            boolean overlap = c.getStartPeriod() <= target.getEndPeriod()
+                    && target.getStartPeriod() <= c.getEndPeriod();
+            if (sameDay && overlap) {
+                return c;
+            }
+        }
         return null;
     }
 

@@ -8,4 +8,6 @@ import java.util.List;
 public interface LeaveApplicationRepository extends JpaRepository<LeaveApplication, Long> {
 
     List<LeaveApplication> findByStudentIdOrderByAppliedAtDesc(Long studentId);
+
+    long countByStatus(String status);
 }

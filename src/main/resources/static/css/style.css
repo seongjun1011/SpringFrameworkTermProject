@@ -616,3 +616,12 @@ table.data-table tbody tr:last-child td {
     display: block;
     margin-bottom: 2px;
 }
+
+/* 교직원(관리자) 화면: 학생 화면과 구분되도록 헤더·로그인 배경색만 다르게 */
+.admin-header {
+    background: #1f3b2e;
+}
+
+.admin-login-wrap {
+    background: linear-gradient(145deg, #14281f 0%, #1f3b2e 50%, #2e5a45 100%);
+}

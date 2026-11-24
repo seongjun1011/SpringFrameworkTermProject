@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--
+    교직원(관리자) 화면 공통 헤더·사이드바.
+    사이드바 메뉴는 로그인한 교직원의 역할(role)에 따라 다르게 보인다.
+    (학사관리자: 학적·수업·게시판 관리 / 결재자: 결재함)
+-->
+<header class="app-header admin-header" th:fragment="header">
+    <a th:href="@{/admin}" class="brand">
+        성준대학교
+        <span class="badge">학사관리시스템</span>
+    </a>
+    <nav>
+        <a th:href="@{/admin}" class="active">관리자 홈</a>
+    </nav>
+    <div class="user-area">
+        <span th:text="${session.loginStaff.department + ' ' + session.loginStaff.name + ' (' + session.loginStaff.role.label + ')'}">교직원</span>
+        <a class="logout-btn" th:href="@{/admin/logout}">로그아웃</a>
+    </div>
+</header>
+
+<aside class="app-sidebar" th:fragment="sidebar(active)">
+    <div class="sidebar-title">학사관리</div>
+
+    <div class="menu-group">
+        <div class="menu-group-title">공통</div>
+        <a class="menu-item" th:classappend="${active == 'home'} ? 'active'" th:href="@{/admin}">관리자 홈</a>
+    </div>
+
+    <th:block th:if="${session.loginStaff.role.academicAdmin}">
+        <div class="menu-group">
+            <div class="menu-group-title">학적 관리</div>
+            <a class="menu-item disabled" href="#" onclick="return false;">학생 학적 등록</a>
+            <a class="menu-item disabled" href="#" onclick="return false;">학생 목록 조회</a>
+        </div>
+        <div class="menu-group">
+            <div class="menu-group-title">수업 관리</div>
+            <a class="menu-item disabled" href="#" onclick="return false;">강좌 개설 · 수정</a>
+        </div>
+        <div class="menu-group">
+            <div class="menu-group-title">게시판 관리</div>
+            <a class="menu-item disabled" href="#" onclick="return false;">공지사항 작성</a>
+            <a class="menu-item disabled" href="#" onclick="return false;">학사일정 등록</a>
+        </div>
+    </th:block>
+
+    <th:block th:if="${session.loginStaff.role.approver}">
+        <div class="menu-group">
+            <div class="menu-group-title">결재</div>
+            <a class="menu-item disabled" href="#" onclick="return false;">결재함</a>
+        </div>
+    </th:block>
+</aside>
+
+</body>
+</html>

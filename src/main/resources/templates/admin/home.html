@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>관리자 홈 - 학사관리시스템</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<header th:replace="~{fragments/admin :: header}"></header>
+
+<div class="app-body">
+    <aside th:replace="~{fragments/admin :: sidebar('home')}"></aside>
+
+    <div class="app-content">
+        <div class="breadcrumb">학사관리 &gt; 관리자 홈</div>
+        <h2 class="page-title">관리자 홈</h2>
+        <p class="page-desc" th:text="${staff.name + '님, ' + staff.role.label + ' 권한으로 로그인했습니다.'}">안내</p>
+
+        <div class="alert error" th:if="${error}" th:text="${error}"></div>
+
+        <div class="widget-grid">
+            <div class="card">
+                <div class="card-title">내 정보</div>
+                <ul class="simple-list">
+                    <li>사번 <span class="item-date" th:text="${staff.staffNo}">A0001</span></li>
+                    <li>소속 <span class="item-date" th:text="${staff.department}">학사지원팀</span></li>
+                    <li>역할 <span class="item-date" th:text="${staff.role.label}">학사관리자</span></li>
+                    <li>마지막 로그인 <span class="item-date"
+                        th:text="${staff.lastLoginAt != null ? #temporals.format(staff.lastLoginAt, 'yyyy-MM-dd HH:mm') : '-'}">-</span></li>
+                </ul>
+            </div>
+
+            <div class="card" th:if="${staff.role.academicAdmin}">
+                <div class="card-title">학적 현황</div>
+                <ul class="simple-list">
+                    <li>등록 학생 수 <span class="item-date" th:text="${studentCount + '명'}">0명</span></li>
+                    <li>잠긴 학생 계정 <span class="item-date" th:text="${lockedCount + '건'}">0건</span></li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-title">결재 진행 현황</div>
+                <ul class="simple-list">
+                    <li>처리 중인 휴학·복학 신청 <span class="item-date" th:text="${pendingLeave + '건'}">0건</span></li>
+                    <li>심사 중인 장학금 신청 <span class="item-date" th:text="${pendingScholarship + '건'}">0건</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

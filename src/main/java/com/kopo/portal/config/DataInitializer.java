@@ -24,6 +24,7 @@ public class DataInitializer implements CommandLineRunner {
     private static final String DEMO_LOGIN_ID = "2301110329";
 
     private final StudentRepository studentRepository;
+    private final StaffRepository staffRepository;
     private final NoticeRepository noticeRepository;
     private final CourseRepository courseRepository;
     private final JobPostingRepository jobPostingRepository;
@@ -33,6 +34,7 @@ public class DataInitializer implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
 
     public DataInitializer(StudentRepository studentRepository,
+                           StaffRepository staffRepository,
                            NoticeRepository noticeRepository,
                            CourseRepository courseRepository,
                            JobPostingRepository jobPostingRepository,
@@ -41,6 +43,7 @@ public class DataInitializer implements CommandLineRunner {
                            ScholarshipApplicationRepository scholarshipRepository,
                            PasswordEncoder passwordEncoder) {
         this.studentRepository = studentRepository;
+        this.staffRepository = staffRepository;
         this.noticeRepository = noticeRepository;
         this.courseRepository = courseRepository;
         this.jobPostingRepository = jobPostingRepository;
@@ -54,6 +57,7 @@ public class DataInitializer implements CommandLineRunner {
     @Transactional
     public void run(String... args) {
         Student demo = registerStudents();
+        registerStaffs();
 
         if (noticeRepository.count() == 0) initNotices();
         if (courseRepository.count() == 0) initCourses();
@@ -94,6 +98,24 @@ public class DataInitializer implements CommandLineRunner {
             return studentRepository.save(Student.register(loginId, passwordEncoder.encode(initialPassword),
                     name, department, campus, grade, birthDate));
         });
+    }
+
+    /**
+     * 데모 교직원 계정 (비밀번호는 모두 staff1234).
+     * 결재자 이름은 결재단계(ApprovalStep)에 기록된 결재자 이름과 같게 맞췄다.
+     */
+    private void registerStaffs() {
+        registerStaff("A0001", "정다은", "학사지원팀", StaffRole.ACADEMIC_ADMIN);
+        registerStaff("S0001", "이수진", "학생지원팀", StaffRole.STAFF);
+        registerStaff("S0002", "최병철", "인공지능소프트웨어과", StaffRole.DEPT_HEAD);
+        registerStaff("S0003", "박현수", "장학위원회", StaffRole.SCHOLARSHIP_COMMITTEE);
+        registerStaff("S0004", "김태호", "학생처", StaffRole.DEAN);
+    }
+
+    private void registerStaff(String staffNo, String name, String department, StaffRole role) {
+        if (staffRepository.findByStaffNo(staffNo).isEmpty()) {
+            staffRepository.save(new Staff(staffNo, passwordEncoder.encode("staff1234"), name, department, role));
+        }
     }
 
     private void initNotices() {

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>교직원 로그인 - 학사관리시스템</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<div class="login-wrap admin-login-wrap">
+    <div class="login-box">
+        <h1>학사관리시스템</h1>
+        <p class="sub">성준대학교 교직원 전용</p>
+
+        <div class="alert error" th:if="${error}" th:text="${error}"></div>
+
+        <form th:action="@{/admin/login}" method="post">
+            <div class="form-row">
+                <label for="staffNo">사번</label>
+                <input type="text" id="staffNo" name="staffNo" th:value="${staffNo}" placeholder="사번을 입력하세요" required>
+            </div>
+            <div class="form-row">
+                <label for="password">비밀번호</label>
+                <input type="password" id="password" name="password" placeholder="비밀번호를 입력하세요" required>
+            </div>
+            <button type="submit" class="btn">로그인</button>
+        </form>
+        <p style="text-align:center;margin-top:14px;font-size:13px;">
+            <a th:href="@{/login}">학생 로그인으로 이동</a>
+        </p>
+        <div class="hint">
+            • 교직원 계정은 학사지원팀에서 발급합니다.<br>
+            • 학사관리자는 학적·수업·게시판 관리, 결재자는 결재함을 이용할 수 있습니다.
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
