@@ -14,7 +14,7 @@
   - 교직원 화면(`/admin/**`): `AdminInterceptor` (교직원 로그인·역할 검사)
 - Spring Data JPA + MySQL 8로 회원·강좌·수강신청·휴학/장학금신청·공지·채용·학사일정 데이터를 DB에 저장
 - 학사팀 사전 등록 계정 + 로그인 (BCrypt 비밀번호 해시, spring-security-crypto) — 회원가입 없음
-- OpenWeatherMap REST API 연동 (RestTemplate), 키 미설정 시 더미 데이터로 대체
+- OpenWeatherMap REST API 연동 (RestTemplate)으로 대시보드에 서울의 실시간 날씨 표시 (키 미설정·호출 실패 시 더미 데이터로 대체)
 
 ## 실행 방법
 
@@ -42,9 +42,11 @@
    | `S0003` | 박현수 | 장학위원회 (결재자) | `staff1234` |
    | `S0004` | 김태호 | 학생처장 (결재자) | `staff1234` |
 
-날씨 위젯에 실시간 데이터를 표시하려면 `src/main/resources/application.properties`의
-`weather.api.key`에 [OpenWeatherMap](https://openweathermap.org/api)에서 발급받은 키를 입력하세요.
-입력하지 않으면 더미 날씨 데이터가 표시됩니다.
+보안상 날씨 API 키는 저장소에 포함하지 않았습니다. 날씨 위젯에 실시간 데이터를 표시하려면
+[OpenWeatherMap](https://openweathermap.org/api)에서 발급받은 키를 환경변수 `WEATHER_API_KEY`로 설정한 뒤 실행하세요.
+(IntelliJ: Run → Edit Configurations → `StudentPortalApplication` → Environment variables에 `WEATHER_API_KEY=발급받은키` 입력)
+
+키가 없거나 API 호출에 실패하면 더미 날씨 데이터가 표시됩니다.
 
 ## 구현된 기능
 

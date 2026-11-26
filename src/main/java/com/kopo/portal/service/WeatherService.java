@@ -45,6 +45,6 @@ public class WeatherService {
     }
 
     private Weather dummyWeather() {
-        return new Weather(city, 23.0, "흐리고 비 (더미 데이터, API 키 미설정)", 2.2);
+        return new Weather(city, 23.0, "흐리고 비 (더미 데이터, API 키 미설정 또는 호출 실패)", 2.2);
     }
 }
